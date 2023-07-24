@@ -7,9 +7,9 @@ ROS_RL, is a unified ([ROS](http://wiki.ros.org/))-based open-source Python fram
 This framework extends the functionality of ROS by introducing additional Python bindings necessary for automatically launching environments in the real world, eliminating the need for manual configuration of the ROS's low-level features.
 
 This framework provides the following features:
-	1. a modular architecture that promotes reproducibility and encourages code reuse, 
-	2. real-time training with any RL simulation framework (Agnostic of any RL simulation framework) 
-	3. tools to execute concurrent environments and maintain communication.
+- 1. a modular architecture that promotes reproducibility and encourages code reuse, 
+- 2. real-time training with any RL simulation framework (Agnostic of any RL simulation framework) 
+- 3. tools to execute concurrent environments and maintain communication.
 
 ## Prerequisites
 
