@@ -7,9 +7,9 @@ ROS_RL, is a unified ([ROS](http://wiki.ros.org/))-based open-source Python fram
 This framework extends the functionality of ROS by introducing additional Python bindings necessary for automatically launching environments in the real world, eliminating the need for manual configuration of the ROS's low-level features.
 
 This framework provides the following features:
-    1) a modular architecture that promotes reproducibility and encourages code reuse, 
-    2) real-time training with any RL simulation framework (Agnostic of any RL simulation framework) 
-    3) tools to execute concurrent environments and maintain communication.
+ 1. A modular architecture that promotes reproducibility and encourages code reuse, 
+ 2. Real-time training with any RL simulation framework (Agnostic of any RL simulation framework) 
+ 3. Tools to execute concurrent environments and maintain communication.
 
 ## Prerequisites
 
@@ -81,7 +81,7 @@ To get started with ROS_RL, follow these steps:
     # Install pip if you haven't already by running this command
     sudo apt-get install python3-pip
 
-    # install the required Python packages for MultiROS by running
+    # install the required Python packages for ROS_RL by running
     cd ~/catkin_ws/src/ros_rl/
     pip3 install -r requirements.txt
     ```
@@ -99,14 +99,14 @@ ROS_RL is released under the [MIT License](https://opensource.org/licenses/MIT).
 
 ## Acknowledgements
 
-We would like to thank the following projects and communities for their valuable contributions, as well as the authors of relevant libraries and tools used in MultiROS.
+We would like to thank the following projects and communities for their valuable contributions, as well as the authors of relevant libraries and tools used in ROS_RL.
 - [ROS (Robot Operating System)](https://www.ros.org/)
 - [MoveIt](https://moveit.ros.org/)
 
 
 ## Cite
 
-If you use MultiROS in your research or work and would like to cite it, you can use the following citation:
+If you use ROS_RL in your research or work and would like to cite it, you can use the following citation:
 
 Repository
 ```bibtex
@@ -117,20 +117,6 @@ Repository
   title = {ROS_RL: A Comprehensive Framework for Real-World Robotic Reinforcement Learning},
   url = {https://github.com/ncbdrck/ros_rl},
   year = {2023}
-}
-```
-Article
-```bibtex
-@inproceedings{kapukotuwa_multiros_2022,
-	title = {{MultiROS}: {ROS}-{Based} {Robot} {Simulation} {Environment} for {Concurrent} {Deep} {Reinforcement} {Learning}},
-	shorttitle = {{MultiROS}},
-	doi = {10.1109/CASE49997.2022.9926475},
-	booktitle = {2022 {IEEE} 18th {International} {Conference} on {Automation} {Science} and {Engineering} ({CASE})},
-	author = {Kapukotuwa, Jayasekara and Lee, Brian and Devine, Declan and Qiao, Yuansong},
-	month = aug,
-	year = {2022},
-	note = {ISSN: 2161-8089},
-	pages = {1098--1103},
 }
 ```
 
