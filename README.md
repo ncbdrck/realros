@@ -81,7 +81,7 @@ To get started with ROS_RL, follow these steps:
     # Install pip if you haven't already by running this command
     sudo apt-get install python3-pip
 
-    # install the required Python packages for MultiROS by running
+    # install the required Python packages for ROS_RL by running
     cd ~/catkin_ws/src/ros_rl/
     pip3 install -r requirements.txt
     ```
@@ -99,14 +99,14 @@ ROS_RL is released under the [MIT License](https://opensource.org/licenses/MIT).
 
 ## Acknowledgements
 
-We would like to thank the following projects and communities for their valuable contributions, as well as the authors of relevant libraries and tools used in MultiROS.
+We would like to thank the following projects and communities for their valuable contributions, as well as the authors of relevant libraries and tools used in ROS_RL.
 - [ROS (Robot Operating System)](https://www.ros.org/)
 - [MoveIt](https://moveit.ros.org/)
 
 
 ## Cite
 
-If you use MultiROS in your research or work and would like to cite it, you can use the following citation:
+If you use ROS_RL in your research or work and would like to cite it, you can use the following citation:
 
 Repository
 ```bibtex
