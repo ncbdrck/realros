@@ -7,9 +7,9 @@ ROS_RL, is a unified ([ROS](http://wiki.ros.org/))-based open-source Python fram
 This framework extends the functionality of ROS by introducing additional Python bindings necessary for automatically launching environments in the real world, eliminating the need for manual configuration of the ROS's low-level features.
 
 This framework provides the following features:
-    1) a modular architecture that promotes reproducibility and encourages code reuse, 
-    2) real-time training with any RL simulation framework (Agnostic of any RL simulation framework) 
-    3) tools to execute concurrent environments and maintain communication.
+	1) a modular architecture that promotes reproducibility and encourages code reuse, 
+	2) real-time training with any RL simulation framework (Agnostic of any RL simulation framework) 
+	3) tools to execute concurrent environments and maintain communication.
 
 ## Prerequisites
 
@@ -117,20 +117,6 @@ Repository
   title = {ROS_RL: A Comprehensive Framework for Real-World Robotic Reinforcement Learning},
   url = {https://github.com/ncbdrck/ros_rl},
   year = {2023}
-}
-```
-Article
-```bibtex
-@inproceedings{kapukotuwa_multiros_2022,
-	title = {{MultiROS}: {ROS}-{Based} {Robot} {Simulation} {Environment} for {Concurrent} {Deep} {Reinforcement} {Learning}},
-	shorttitle = {{MultiROS}},
-	doi = {10.1109/CASE49997.2022.9926475},
-	booktitle = {2022 {IEEE} 18th {International} {Conference} on {Automation} {Science} and {Engineering} ({CASE})},
-	author = {Kapukotuwa, Jayasekara and Lee, Brian and Devine, Declan and Qiao, Yuansong},
-	month = aug,
-	year = {2022},
-	note = {ISSN: 2161-8089},
-	pages = {1098--1103},
 }
 ```
 
