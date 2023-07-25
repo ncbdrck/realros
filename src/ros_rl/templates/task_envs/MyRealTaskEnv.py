@@ -2,6 +2,8 @@
 
 import rospy
 from gym.envs.registration import register
+import numpy as np
+from gym import spaces
 
 # Custom robot env
 from ros_rl.templates.robot_envs import MyRealRobotEnv
