@@ -30,7 +30,8 @@ class MyRealRobotEnv(RealBaseEnv.RealBaseEnv):
     Superclass for all Robot environments.
     """
 
-    def __init__(self, ros_port: str = None, seed: int = None, reset_env_prompt: bool = False):
+    def __init__(self, ros_port: str = None, seed: int = None, reset_env_prompt: bool = False,
+                 close_env_prompt: bool = False):
         """
         Initializes a new Robot Environment
 
@@ -131,7 +132,7 @@ class MyRealRobotEnv(RealBaseEnv.RealBaseEnv):
             load_controllers=load_controllers, controllers_file=controllers_file, controllers_list=controllers_list,
             reset_controllers=reset_controllers, reset_controllers_prompt=reset_controllers_prompt,
             kill_rosmaster=kill_rosmaster, clean_logs=clean_logs, ros_port=ros_port, seed=seed,
-            reset_env_prompt=reset_env_prompt)
+            reset_env_prompt=reset_env_prompt, close_env_prompt=close_env_prompt)
 
         """
         Define ros publisher, subscribers and services for robot and sensors
