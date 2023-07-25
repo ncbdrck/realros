@@ -22,7 +22,8 @@ class RealBaseEnv(gym.Env):
                  new_robot_state_term: bool = False, load_controllers: bool = False,
                  controllers_file: str = None, controllers_list: List[str] = None, reset_controllers: bool = False,
                  reset_controllers_prompt: bool = False, kill_rosmaster: bool = True, clean_logs: bool = False,
-                 ros_port: str = None, seed: int = None, reset_env_prompt: bool = False):
+                 ros_port: str = None, seed: int = None, reset_env_prompt: bool = False,
+                 close_env_prompt: bool = False):
 
         """
         Initialize the RealBaseEnv.
@@ -51,6 +52,7 @@ class RealBaseEnv(gym.Env):
             ros_port (str): The port number to use for the ROS master.
             seed (int): The seed for the random number generator.
             reset_env_prompt (bool): Whether to prompt the user for resetting the environment.
+            close_env_prompt (bool): Whether to prompt the user for closing the environment.
 
         """
 
@@ -98,6 +100,7 @@ class RealBaseEnv(gym.Env):
         self.clean_logs = clean_logs
         self.reset_controllers_prompt = reset_controllers_prompt
         self.reset_env_prompt = reset_env_prompt
+        self.close_env_prompt = close_env_prompt
 
         # --------- Seed the random number generator
         self.np_random = None
@@ -271,6 +274,11 @@ class RealBaseEnv(gym.Env):
             ros_common.change_ros_master(ros_port=self.ros_port)
 
         rospy.loginfo(self.CYAN + "*************** Start Closing Env" + self.ENDC)
+
+        # prompt the user for closing the environment
+        if self.close_env_prompt:
+            user_input = input("Please enter any key to close the Environment: ")
+            rospy.logdebug(f"Close Environment!: {user_input}")
 
         # Shutdown the ROS node
         rospy.signal_shutdown("Closing Environment")
