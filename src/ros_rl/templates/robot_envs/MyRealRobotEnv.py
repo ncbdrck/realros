@@ -123,8 +123,8 @@ class MyRealRobotEnv(RealBaseEnv.RealBaseEnv):
         Init GazeboBaseEnv.
         """
         super().__init__(
-            load_robot=False, robot_pkg_name=None, robot_launch_file=None, robot_args=None,
-            load_urdf=load_urdf, urdf_pkg_name=urdf_pkg_name, urdf_file_name=urdf_file_name,
+            load_robot=load_robot, robot_pkg_name=robot_pkg_name, robot_launch_file=robot_launch_file,
+            robot_args=robot_args, load_urdf=load_urdf, urdf_pkg_name=urdf_pkg_name, urdf_file_name=urdf_file_name,
             urdf_folder=urdf_folder, urdf_xacro_args=urdf_xacro_args, namespace=namespace,
             launch_robot_state_pub=launch_robot_state_pub,
             robot_state_publisher_max_freq=robot_state_publisher_max_freq, new_robot_state_term=new_robot_state_term,
