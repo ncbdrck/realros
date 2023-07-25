@@ -92,6 +92,18 @@ To get started with ROS_RL, follow these steps:
    catkin build
    source devel/setup.bash
     ```
+   
+## Usage
+
+you can refer to the [examples](https://github.com/ncbdrck/reactorx200_ros_reacher) to see how to use ROS_RL to create a real-world environment for RL applications.
+
+It also showcases:
+- How to use ROS_RL to create a real-world environment for RL applications.
+- Train the Rx200 robot directly in the real world to perform a simple reach task.
+- Use [MultiROS](https://github.com/ncbdrck/multiros) framework to create a simulation environment for the same robot and train it in the simulation environment. Then transfer the learned policy to the real-world environment.
+- Train both environments (sim and real) in real-time to obtain a generalized policy that performs well in both environments.
+
+The installation instructions for the examples are provided in the respective repositories.
 
 ## License
 
