@@ -23,7 +23,7 @@ class RealBaseEnv(gym.Env):
                  controllers_file: str = None, controllers_list: List[str] = None, reset_controllers: bool = False,
                  reset_controllers_prompt: bool = False, kill_rosmaster: bool = True, clean_logs: bool = False,
                  ros_port: str = None, seed: int = None, reset_env_prompt: bool = False,
-                 close_env_prompt: bool = False):
+                 close_env_prompt: bool = False, action_cycle_time: float = 0.0):
 
         """
         Initialize the RealBaseEnv.
@@ -53,6 +53,7 @@ class RealBaseEnv(gym.Env):
             seed (int): The seed for the random number generator.
             reset_env_prompt (bool): Whether to prompt the user for resetting the environment.
             close_env_prompt (bool): Whether to prompt the user for closing the environment.
+            action_cycle_time (float): The time to wait between applying actions.
 
         """
 
@@ -76,6 +77,7 @@ class RealBaseEnv(gym.Env):
         """
         self.ros_port = ros_port
         self.random_seed = seed
+        self.action_cycle_time = action_cycle_time
 
         self.info = {}
         self.done = None
@@ -216,6 +218,10 @@ class RealBaseEnv(gym.Env):
 
         # Apply the action
         self._set_action(action)
+
+        # If using the action cycle time
+        if self.action_cycle_time > 0.0:
+            rospy.sleep(self.action_cycle_time)
 
         # Get the observation, reward, and done flag
         self.info = {}
