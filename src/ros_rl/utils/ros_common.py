@@ -464,7 +464,7 @@ def ros_node_launcher(pkg_name, node_name, launch_master=False, launch_new_term=
         ns (str): Namespace to give the node to be launched.
         output (str): log, screen, or None
         ros_port (str): The ROS_MASTER_URI port (optional).
-        args (list of str): Args to pass.
+        args (List[str]): List of additional arguments to pass to the rosrun command.
 
     Returns:
         tuple[str, bool]: ROS Master port, and True if the node was launched successfully,
@@ -740,18 +740,20 @@ def init_robot_state_publisher(ns: str = "/", max_pub_freq: float = None, launch
     Returns:
         bool: True if the node was launched successfully, False otherwise.
     """
+
     if max_pub_freq is not None:
-        # Remove any trailing slashes from ns
-
-        if ns != "/":
-            ns = ns.rstrip('/')
-            rospy.set_param(ns + "/rob_st_pub/publish_frequency", max_pub_freq)
-        else:
-            rospy.set_param("/rob_st_pub/publish_frequency", max_pub_freq)
-
-    _, launch_done = ros_node_launcher(pkg_name="robot_state_publisher",
-                                       node_name="robot_state_publisher",
-                                       launch_new_term=launch_new_term, ns=ns)
+        _, launch_done = ros_node_launcher(pkg_name="robot_state_publisher",
+                                           node_name="robot_state_publisher",
+                                           launch_new_term=launch_new_term,
+                                           ns=ns,
+                                           args=[f"publish_frequency:={max_pub_freq}"]
+                                           )
+    else:
+        # we don't need the first two since we are not launching a new roscore
+        _, launch_done = ros_node_launcher(pkg_name="robot_state_publisher",
+                                           node_name="robot_state_publisher",
+                                           launch_new_term=launch_new_term,
+                                           ns=ns)
 
     if launch_done:
         rospy.logdebug("Successfully initialised the Robot State Publisher!")
@@ -778,4 +780,3 @@ def remove_all_from_rosmaster_list() -> bool:
     rospy.loginfo("Removed all ports from the ROS_RL rosmaster port list!")
 
     return True
-
