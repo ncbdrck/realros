@@ -24,6 +24,9 @@ It has the following methods (Main functions),
     18. set_max_acceleration_scaling_factor: Set the maximum acceleration scaling factor for the robot arm.
     19. set_max_velocity_scaling_factor: Set the maximum velocity scaling factor for the robot arm.
     20. set_trajectory_cartesian: Set a cartesian trajectory for the end effector of the robot arm.
+    21. stop_arm: Stop the robot arm from moving.
+    22. stop_gripper: Stop the gripper from moving.
+    23. check_goal_joint_pos: Check if a goal position is reachable by the robot arm.
 
 """
 import sys
@@ -108,12 +111,13 @@ class MoveitROS_RL(object):
         helper fns
     """
 
-    def arm_execute_pose(self, pose: Pose) -> bool:
+    def arm_execute_pose(self, pose: Pose, async_move: bool = False) -> bool:
         """
         Execute a pose with the robot arm.
 
         Args:
             pose (Pose): The target pose for the robot arm.
+            async_move (bool): Whether to execute the trajectory asynchronously or not (Optional).
 
         Returns:
             bool: The result of the trajectory execution.
@@ -123,19 +127,20 @@ class MoveitROS_RL(object):
         self.robot_arm.set_pose_target(pose)
 
         # Execute the trajectory to reach the target pose
-        result = self.arm_execute_trajectory()
+        result = self.arm_execute_trajectory(async_move=async_move)
 
         # Clear the pose targets
         self.robot_arm.clear_pose_targets()
 
         return result
 
-    def arm_execute_joint_trajectory(self, joint_target_values: List[float]) -> bool:
+    def arm_execute_joint_trajectory(self, joint_target_values: List[float], async_move: bool = False) -> bool:
         """
         Execute a joint trajectory with the robot arm.
 
         Args:
             joint_target_values (List[float]): The target joint values for the robot arm.
+            async_move (bool): Whether to execute the trajectory asynchronously or not (Optional).
 
         Returns:
             bool: The result of the trajectory execution.
@@ -158,16 +163,17 @@ class MoveitROS_RL(object):
         self.robot_arm.set_joint_value_target(joint_goal)
 
         # Execute the trajectory to reach the target joint values
-        result = self.arm_execute_trajectory()
+        result = self.arm_execute_trajectory(async_move=async_move)
 
         return result
 
-    def gripper_execute_joint_command(self, target_joint_values: List[float]) -> bool:
+    def gripper_execute_joint_command(self, target_joint_values: List[float], async_move: bool = False) -> bool:
         """
         Execute a joint command with the gripper.
 
         Args:
             target_joint_values (List[float]): The target joint values for the gripper.
+            async_move (bool): Whether to execute the trajectory asynchronously or not (Optional).
 
         Returns:
             bool: The result of the command execution.
@@ -186,15 +192,23 @@ class MoveitROS_RL(object):
         for i in range(len(target_joint_values)):
             gripper_joints[i] = float(target_joint_values[i])
 
-        # Move the gripper to the target joint values
-        result = self.gripper.go(gripper_joints, wait=True)
+        if async_move:
+            # self.gripper.stop()
+            self.gripper.set_start_state_to_current_state()  # set the start state to the current state
 
-        # Stop the gripper from moving
-        self.gripper.stop()
+            # Move the gripper to the target joint values
+            result = self.gripper.go(gripper_joints, wait=False)
+
+        else:
+            # Move the gripper to the target joint values
+            result = self.gripper.go(gripper_joints, wait=True)
+
+            # Stop the gripper from moving
+            self.gripper.stop()
 
         return result
 
-    def arm_execute_trajectory(self) -> bool:
+    def arm_execute_trajectory(self, async_move: bool = False) -> bool:
         """
         Execute a trajectory with the robot arm.
 
@@ -202,13 +216,33 @@ class MoveitROS_RL(object):
             bool: The result of the trajectory execution.
         """
 
-        # Execute the trajectory to reach the target
-        result = self.robot_arm.go(wait=True)
+        # for async move
+        if async_move:
+            # self.robot_arm.stop()  # stop the robot arm from moving
+            self.robot_arm.set_start_state_to_current_state()  # set the start state to the current state
 
-        # Stop the robot arm from moving
-        self.robot_arm.stop()
+            # Execute the trajectory to reach the target
+            result = self.robot_arm.go(wait=False)
+        else:
+            # Execute the trajectory to reach the target
+            result = self.robot_arm.go(wait=True)
+
+            # Stop the robot arm from moving
+            self.robot_arm.stop()
 
         return result
+
+    def stop_arm(self):
+        """
+        Stop the robot arm from moving.
+        """
+        self.robot_arm.stop()
+
+    def stop_gripper(self):
+        """
+        Stop the gripper from moving.
+        """
+        self.gripper.stop()
 
     def robot_pose(self):
         """
@@ -308,18 +342,48 @@ class MoveitROS_RL(object):
 
         return result
 
+    def check_goal_reachable_joint_pos(self, joint_pos: Union[List[float], np.ndarray]) -> bool:
+        """
+        Check if a goal position is reachable by the robot arm.
+
+        Args:
+            joint_pos (Union[List[float], np.ndarray]): joint positions.
+
+        Returns:
+            bool: Whether the goal position is reachable or not.
+        """
+        # Convert goal to list if it is a numpy array
+        if isinstance(joint_pos, np.ndarray):
+            joint_pos = joint_pos.tolist()
+
+        # Set the position target of the robot arm to the goal
+        self.robot_arm.set_joint_value_target(joint_pos)
+
+        # Plan a trajectory to reach the goal
+        plan = self.robot_arm.plan()
+
+        # Get the result of the plan
+        result = plan[0]
+
+        # Clear the pose targets
+        self.robot_arm.clear_pose_targets()
+
+        return result
+
     """
             Main functions we can call from the object
     """
 
     def set_trajectory_ee(self, position: Union[List[float], np.ndarray],
-                          orientation: Union[List[float], np.ndarray] = None) -> bool:
+                          orientation: Union[List[float], np.ndarray] = None,
+                          async_move: bool = False) -> bool:
         """
         Set a pose target for the end effector of the robot arm.
 
         Args:
             position (Union[List[float], np.ndarray]): The target position for the end effector.
             orientation (Union[List[float], np.ndarray]): The target orientation for the end effector (Optional).
+            async_move (bool): Whether to execute the trajectory asynchronously or not (Optional).
 
         Returns:
             bool: The result of the trajectory execution.
@@ -349,14 +413,15 @@ class MoveitROS_RL(object):
             ee_target.orientation.w = orientation[3]
 
         # Execute the trajectory to move the end effector to the desired position and orientation
-        return self.arm_execute_pose(ee_target)
+        return self.arm_execute_pose(ee_target, async_move=async_move)
 
-    def set_trajectory_joints(self, q_positions: Union[List[float], np.ndarray]) -> bool:
+    def set_trajectory_joints(self, q_positions: Union[List[float], np.ndarray], async_move: bool = False) -> bool:
         """
         Set a joint position target for the arm joints.
 
         Args:
             q_positions (Union[List[float], np.ndarray]): The target joint positions for the robot arm.
+            async_move (bool): Whether to execute the trajectory asynchronously or not (Optional).
 
         Returns:
             bool: The result of the trajectory execution.
@@ -366,14 +431,15 @@ class MoveitROS_RL(object):
             q_positions = q_positions.tolist()
 
         # Execute a joint trajectory to move the arm to the desired joint positions
-        return self.arm_execute_joint_trajectory(q_positions)
+        return self.arm_execute_joint_trajectory(q_positions, async_move=async_move)
 
-    def set_gripper_joints(self, joint_positions: Union[List[float], np.ndarray]) -> bool:
+    def set_gripper_joints(self, joint_positions: Union[List[float], np.ndarray], async_move: bool = False) -> bool:
         """
         Set a joint position target for the gripper joints.
 
         Args:
             joint_positions (Union[List[float], np.ndarray]): The target joint positions for the gripper.
+            async_move (bool): Whether to execute the trajectory asynchronously or not (Optional).
 
         Returns:
             bool: The result of the command execution.
@@ -383,10 +449,11 @@ class MoveitROS_RL(object):
             joint_positions = joint_positions.tolist()
 
         # Execute a joint command to move the gripper to the desired joint positions
-        return self.gripper_execute_joint_command(joint_positions)
+        return self.gripper_execute_joint_command(joint_positions, async_move=async_move)
 
-    def set_trajectory_cartesian(self, waypoints: List[PoseStamped], eef_step: float = 0.01, jump_threshold: float = 0.0,
-                                    avoid_collisions: bool = True) -> bool:
+    def set_trajectory_cartesian(self, waypoints: List[PoseStamped], eef_step: float = 0.01,
+                                 jump_threshold: float = 0.0,
+                                 avoid_collisions: bool = True) -> bool:
         """
         Set a cartesian trajectory for the end effector of the robot arm.
 
@@ -498,6 +565,19 @@ class MoveitROS_RL(object):
             bool: Whether the goal position is reachable or not.
         """
         return self.is_goal_reachable(goal)
+
+    def check_goal_joint_pos(self, joint_pos: Union[List[float], np.ndarray]) -> bool:
+        """
+
+        Check if a goal position is reachable by the robot arm.
+
+        Args:
+            joint_pos (Union[List[float], np.ndarray]): The target position for the robot arm.
+
+        Returns:
+            bool: Whether the goal position is reachable or not.
+        """
+        return self.check_goal_reachable_joint_pos(joint_pos)
 
     def get_randomJointVals(self) -> List[float]:
         """
