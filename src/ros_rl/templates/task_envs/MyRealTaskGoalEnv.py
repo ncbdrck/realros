@@ -28,7 +28,7 @@ class MyRealTaskGoalEnv(MyRealRobotGoalEnv.MyRealRobotGoalEnv):
     """
 
     def __init__(self, new_roscore: bool = True, roscore_port: str = None, seed: int = None,
-                 reset_env_prompt: bool = False):
+                 reset_env_prompt: bool = False, action_cycle_time: float = 0.0, default_port=False):
         """
 
         In the initialization statement, you can initialize any desired number and type of variables and pass the
@@ -65,8 +65,12 @@ class MyRealTaskGoalEnv(MyRealRobotGoalEnv.MyRealRobotGoalEnv):
         Initialise the env
         """
 
+        # launch a new roscore with default port
+        if default_port:
+            ros_port = self._launch_roscore(default_port=default_port)
+
         # Launch new roscore
-        if new_roscore:
+        elif new_roscore:
             ros_port = self._launch_roscore(port=roscore_port)
 
         # ros_port of the already running roscore
@@ -143,7 +147,8 @@ class MyRealTaskGoalEnv(MyRealRobotGoalEnv.MyRealRobotGoalEnv):
         """
         Init super class.
         """
-        super().__init__(ros_port=ros_port, seed=seed, reset_env_prompt=reset_env_prompt)
+        super().__init__(ros_port=ros_port, seed=seed, reset_env_prompt=reset_env_prompt,
+                         action_cycle_time=action_cycle_time)
 
         """
         Finished __init__ method
@@ -251,7 +256,8 @@ class MyRealTaskGoalEnv(MyRealRobotGoalEnv.MyRealRobotGoalEnv):
     # ------------------------------------------------------
     #   Task Methods for launching roscore
 
-    def _launch_roscore(self, port=None, set_new_master_vars=False):
+    @staticmethod
+    def _launch_roscore(port=None, set_new_master_vars=False, default_port=False):
         """
         Launches a new roscore with the specified port. Only updates the ros_port.
 
@@ -259,7 +265,11 @@ class MyRealTaskGoalEnv(MyRealRobotGoalEnv.MyRealRobotGoalEnv):
             ros_port: port of launched roscore
         """
 
-        ros_port, _ = ros_common.launch_roscore(port=int(port), set_new_master_vars=set_new_master_vars)
+        if port is None:
+            port = int(port)
+
+        ros_port = ros_common.launch_roscore(port=port, set_new_master_vars=set_new_master_vars,
+                                             default_port=default_port)
 
         # change to new rosmaster
         ros_common.change_ros_master(ros_port)
