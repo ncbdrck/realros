@@ -35,7 +35,7 @@ import xacro
 from typing import Tuple, Union
 
 
-def launch_roscore(port: int = None, set_new_master_vars: bool = True) -> str:
+def launch_roscore(port: int = None, set_new_master_vars: bool = True, default_port: bool = False) -> str:
     """
     Function to launch a roscore. It launches a roscore and sets a temporary variable in a file to track all the
     current python program's opened roscores. This allows the script to launch multiple ROS instances in parallel and
@@ -44,6 +44,7 @@ def launch_roscore(port: int = None, set_new_master_vars: bool = True) -> str:
     Args:
         port (int): A port for the ROS_MASTER_URI (optional).
         set_new_master_vars (bool): change the current ROS_MASTER to the selected one
+        default_port (bool): If True, launch the roscore with default port 11311
 
     Returns:
         str: Ports selected for the ROS_MASTER_URI.
@@ -64,7 +65,7 @@ def launch_roscore(port: int = None, set_new_master_vars: bool = True) -> str:
     # if there is no such a file, create one
     else:
         print("No existing ROSMASTER ports!")
-        ROSMASTER_LIST = '11311'  # Default port for ROS. So better to not select it
+        ROSMASTER_LIST = ''
         all_ros_masters = list(ROSMASTER_LIST.split(" "))
         with open(env_file_path, 'w') as f:
             f.write(ROSMASTER_LIST)
@@ -72,6 +73,9 @@ def launch_roscore(port: int = None, set_new_master_vars: bool = True) -> str:
 
     # done is True if the selected or given port is not in the temp file
     done = False
+
+    if default_port:
+        port = 11311
 
     # Find and launch the ros master with the given port if it is not already in use
     if port is not None:
@@ -87,8 +91,16 @@ def launch_roscore(port: int = None, set_new_master_vars: bool = True) -> str:
             rospy.logdebug(f"Updated the ROSMASTER port list with port {ros_port}!")
 
         else:
-            rospy.logwarn("The port already exists! So launching rosmaster with a new port")
-            print("The port already exists! So launching with a new port")
+            if port == 11311:
+                rospy.logwarn("The default port is already in use!")
+
+                if set_new_master_vars:
+                    change_ros_master(str(port))
+
+                return str(port)
+            else:
+                rospy.logwarn("The port already exists! So launching rosmaster with a new port")
+                print("The port already exists! So launching with a new port")
 
     # If not done, try to find an unused port by generating random port numbers until one is found that is
     # not already in use
