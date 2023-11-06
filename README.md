@@ -38,17 +38,7 @@ ROS_RL uses Catkin as the build system for ROS packages. Install Catkin Tools by
 ```shell
 sudo apt-get install python3-catkin-tools
 ```
-### Other Packages 
-ROS_RL also requires the following additional packages:
-- XTerm for terminal emulation:
-    ```shell
-    sudo apt install xterm
-    ```
-- [MoveIt](https://moveit.ros.org/) for motion planning:
-    ```shell
-    sudo apt install ros-noetic-moveit
-    ```
-  
+
 ### Create ROS Workspace
 Before using ROS_RL, you need to create a ROS workspace to build and run your ROS packages. Follow these steps to create a workspace:
 ```shell
@@ -60,6 +50,31 @@ catkin build
 echo "source ~/catkin_ws/devel/setup.bash" >> ~/.bashrc
 source ~/.bashrc
 ```
+
+### Other Packages 
+ROS_RL also requires the following additional packages:
+- XTerm for terminal emulation:
+    ```shell
+    sudo apt install xterm
+    ```
+- [MoveIt](https://moveit.ros.org/) for motion planning:
+    ```shell
+    sudo apt install ros-noetic-moveit
+    ```
+- [kdl_parser_py](http://wiki.ros.org/kdl_parser_py) for parsing URDF files (for ros_kinematics):
+    ```shell
+    sudo apt install ros-noetic-kdl-parser-py
+    ```
+- trac_ik_python for inverse kinematics:
+    ```shell
+    # Download and install trac_ik_python
+    cd ~/catkin_ws/src
+    git clone https://bitbucket.org/traclabs/trac_ik.git
+  
+    # Build the package
+    cd ~/catkin_ws/
+    catkin build trac_ik_python
+    ```
 
 You are now ready to proceed with the installation and usage of ROS_RL.
 
