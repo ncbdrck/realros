@@ -65,16 +65,38 @@ ROS_RL also requires the following additional packages:
     ```shell
     sudo apt install ros-noetic-kdl-parser-py
     ```
-- trac_ik_python for inverse kinematics:
+- [trac_ik_python](http://wiki.ros.org/trac_ik_python) for inverse kinematics (for Kinematics_pyrobot):
     ```shell
-    # Download and install trac_ik_python
+  # Download and install trac_ik_python
     cd ~/catkin_ws/src
     git clone https://bitbucket.org/traclabs/trac_ik.git
-  
-    # Build the package
-    cd ~/catkin_ws/
-    catkin build trac_ik_python
     ```
+- [pykdl_utils](http://wiki.ros.org/pykdl_utils) for kinematics (for Kinematics_pykdl):
+    ```shell
+    # download the package - modified version of the original package to support ROS Noetic
+    cd ~/catkin_ws/src
+    git clone https://github.com/ncbdrck/hrl-kdl.git
+  
+    # install the pykd_utils
+    cd ~/catkin_ws/src/hrl-kdl/pykdl_utils
+    python3 setup.py build
+    sudo python3 setup.py install
+  
+    # install the hrl_geom
+    cd ~/catkin_ws/src/hrl-kdl/hrl_geom
+    python3 setup.py build
+    sudo python3 setup.py install
+    
+  # Install urdf_parser and urdfdom-py
+    sudo apt-get install ros-noetic-urdf-parser-plugin
+    sudo apt-get install ros-noetic-urdfdom-py
+    
+    # Build the package
+    cd ~/catkin_ws
+    rosdep install --from-paths src --ignore-src -r -y
+    catkin build
+    source devel/setup.bash
+  ```
 
 You are now ready to proceed with the installation and usage of ROS_RL.
 
