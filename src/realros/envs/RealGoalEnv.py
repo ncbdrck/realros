@@ -1,32 +1,33 @@
 #!/bin/python3
-import time
+
 import rospy
 import gym
 from gym.utils import seeding
-
-from ros_rl.utils import ros_common
-from ros_rl.utils import ros_controllers
+from realros.utils import ros_common
+from realros.utils import ros_controllers
 from typing import List
+import time
 
 
-class RealBaseEnv(gym.Env):
+class RealGoalEnv(gym.GoalEnv):
     """
     A custom OpenAI Gym environment for reinforcement learning using ROS and real robots.
+
+    More suited for Goal Envs
     """
 
-    def __init__(self, load_robot: bool = True, robot_pkg_name: str = None,
-                 robot_launch_file: str = None, robot_args: List[str] = None,
-                 load_urdf: bool = False, urdf_pkg_name: str = None, urdf_file_name: str = None,
-                 urdf_folder: str = "/urdf", urdf_xacro_args: List[str] = None, namespace: str = "/",
-                 launch_robot_state_pub: bool = False, robot_state_publisher_max_freq: float = None,
-                 new_robot_state_term: bool = False, load_controllers: bool = False,
-                 controllers_file: str = None, controllers_list: List[str] = None, reset_controllers: bool = False,
-                 reset_controllers_prompt: bool = False, kill_rosmaster: bool = True, clean_logs: bool = False,
-                 ros_port: str = None, seed: int = None, reset_env_prompt: bool = False,
+    def __init__(self, load_robot: bool = True, robot_pkg_name: str = None, robot_launch_file: str = None,
+                 robot_args: List[str] = None, load_urdf: bool = False, urdf_pkg_name: str = None,
+                 urdf_file_name: str = None, urdf_folder: str = "/urdf", urdf_xacro_args: List[str] = None,
+                 namespace: str = "/", launch_robot_state_pub: bool = False,
+                 robot_state_publisher_max_freq: float = None, new_robot_state_term: bool = False,
+                 load_controllers: bool = False, controllers_file: str = None, controllers_list: List[str] = None,
+                 reset_controllers: bool = False, reset_controllers_prompt: bool = False, kill_rosmaster: bool = True,
+                 clean_logs: bool = False, ros_port: str = None, seed: int = None, reset_env_prompt: bool = False,
                  close_env_prompt: bool = False, action_cycle_time: float = 0.0):
 
         """
-        Initialize the RealBaseEnv.
+        Initialize the RealGoalEnv environment.
 
         Args:
             load_robot (bool): Load the real robot using a launch file.
@@ -70,7 +71,7 @@ class RealBaseEnv(gym.Env):
         self.CYAN = '\033[96m'
         self.ENDC = '\033[0m'
 
-        rospy.loginfo(self.CYAN + "Start init RealBaseEnv!" + self.ENDC)
+        rospy.loginfo(self.CYAN + "Start init RealGoalEnv!" + self.ENDC)
 
         """
         Initialize the variables
@@ -80,9 +81,11 @@ class RealBaseEnv(gym.Env):
         self.action_cycle_time = action_cycle_time
 
         self.info = {}
-        self.done = None
-        self.reward = 0.0
         self.observation = None
+        self.achieved_goal = None
+        self.desired_goal = None
+        self.reward = 0.0
+        self.done = None
 
         # --------- Change the ros master
         if self.ros_port is not None:
@@ -180,7 +183,7 @@ class RealBaseEnv(gym.Env):
 
             ros_controllers.reset_controllers(controller_list=self.controllers_list, ns=self.namespace)
 
-        rospy.loginfo(self.CYAN + "End init RealBaseEnv" + self.ENDC)
+        rospy.loginfo(self.CYAN + "End init RealGoalEnv" + self.ENDC)
 
     def seed(self, seed: int = None):
         """
@@ -203,7 +206,7 @@ class RealBaseEnv(gym.Env):
             action (Any): The action to be applied to the robot.
 
         Returns:
-            observation (Any): The observation representing the current state of the environment.
+            observation (dict): A dictionary containing the observation, achieved goal, and desired goal.
             reward (float): The reward for taking the given action.
             done (bool): Whether the episode has ended.
             info (dict): Additional information about the environment.
@@ -226,20 +229,22 @@ class RealBaseEnv(gym.Env):
         # Get the observation, reward, and done flag
         self.info = {}
         self.observation = self._get_observation()
-        self.reward = self._get_reward()
+        self.achieved_goal = self._get_achieved_goal()
+        self.desired_goal = self._get_desired_goal()
+        self.reward = self.compute_reward(self.achieved_goal, self.desired_goal, self.info)
         self.done = self._is_done()
-        
 
         # rospy.loginfo(self.MAGENTA + "*************** End Step Env" + self.ENDC)
 
-        return self.observation, self.reward, self.done, self.info
+        return {'observation': self.observation, 'achieved_goal': self.achieved_goal,
+                'desired_goal': self.desired_goal}, self.reward, self.done, self.info
 
     def reset(self):
         """
         Reset the environment.
 
         Returns:
-            observation (Any): The initial observation representing the state of the environment.
+            observation (dict): A dictionary containing the initial observation, achieved goal, and desired goal.
         """
 
         # --------- Change the ros master
@@ -266,10 +271,12 @@ class RealBaseEnv(gym.Env):
         self._set_init_params()
 
         self.observation = self._get_observation()
+        self.achieved_goal = self._get_achieved_goal()
+        self.desired_goal = self._get_desired_goal()
 
         rospy.loginfo(self.MAGENTA + "*************** End Reset Env" + self.ENDC)
 
-        return self.observation
+        return {'observation': self.observation, 'achieved_goal': self.achieved_goal, 'desired_goal': self.desired_goal}
 
     def close(self):
         """
@@ -284,7 +291,7 @@ class RealBaseEnv(gym.Env):
 
         # prompt the user for closing the environment
         if self.close_env_prompt:
-            user_input = input("Please enter any key to close the Environment: ")
+            user_input = input("Please enter any key to Close the Environment: ")
             rospy.logdebug(f"Close Environment!: {user_input}")
 
         # Shutdown the ROS node
@@ -329,19 +336,6 @@ class RealBaseEnv(gym.Env):
         """
         raise NotImplementedError()
 
-    def _get_reward(self):
-        """
-        Function to get a reward from the environment.
-
-        This method should be implemented by subclasses to return a scalar reward value representing how well the agent
-        is doing in the current episode. The reward could be based on the distance to a goal, the amount of time taken
-        to reach a goal, or any other metric that can be used to measure how well the agent is doing.
-
-        Returns:
-            A scalar reward value representing how well the agent is doing in the current episode.
-        """
-        raise NotImplementedError()
-
     def _is_done(self):
         """
         Function to check if the episode is done.
@@ -365,6 +359,43 @@ class RealBaseEnv(gym.Env):
         """
         raise NotImplementedError()
 
+    def _get_achieved_goal(self):
+        """
+        Get the achieved goal from the environment.
+
+        Returns:
+            achieved_goal (Any): The achieved goal representing the current state of the environment.
+        """
+        raise NotImplementedError()
+
+    def _get_desired_goal(self):
+        """
+        Get the desired goal from the environment.
+
+        Returns:
+            desired_goal (Any): The desired goal representing the target state of the environment.
+        """
+        raise NotImplementedError()
+
+    def compute_reward(self, achieved_goal, desired_goal, info) -> float:
+        """
+        Compute the reward for achieving a given goal.
+
+        This method should be implemented by subclasses to return a scalar reward value representing how well the agent
+        is doing in the current episode. The reward could be based on the distance to a goal, the amount of time taken
+        to reach a goal, or any other metric that can be used to measure how well the agent is doing.
+
+        Args:
+            achieved_goal (Any): The achieved goal representing the current state of the environment.
+            desired_goal (Any): The desired goal representing the target state of the environment.
+            info (dict): Additional information about the environment.
+
+        Returns:
+            reward (float): The reward for achieving the given goal.
+        """
+
+        raise NotImplementedError()
+
     # ------------------------------------------
     #   Methods to override in CustomRobotEnv
 
@@ -376,4 +407,4 @@ class RealBaseEnv(gym.Env):
         raise NotImplementedError()
 
     # ------------------------------------------
-    #  Define Custom methods for the RealBaseEnv
+    #   Add Custom methods for the RealGoalEnv

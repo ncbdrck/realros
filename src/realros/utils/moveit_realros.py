@@ -38,7 +38,7 @@ from geometry_msgs.msg import Pose
 from geometry_msgs.msg import PoseStamped
 
 
-class MoveitROS_RL(object):
+class MoveitRealROS(object):
     """
     A class for using MoveIt!
 
@@ -52,7 +52,7 @@ class MoveitROS_RL(object):
 
     def __init__(self, arm_name: str, gripper_name: str = None, robot_description: str = None, ns: str = None):
 
-        rospy.loginfo("Initializing Moveit_ROS_RL")
+        rospy.loginfo("Initializing Moveit_RealROS")
 
         # Initialize MoveIt! commander
         moveit_commander.roscpp_initialize(sys.argv)
@@ -105,7 +105,7 @@ class MoveitROS_RL(object):
         else:
             rospy.loginfo("No gripper is added")
 
-        rospy.loginfo("Moveit_ROS_RL initialization complete!")
+        rospy.loginfo("Moveit_RealROS initialization complete!")
 
     """
         helper fns

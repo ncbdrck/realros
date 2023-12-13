@@ -153,7 +153,7 @@ def get_all_the_ros_masters() -> str:
             rosmaster_list = f.read().strip()
 
     else:
-        print("No existing ROS_RL ROSMASTER ports!")
+        print("No existing RealROS ROSMASTER ports!")
         rosmaster_list = '11311'  # Default port for ROS. So better to not select it
         with open(env_file_path, 'w') as f:
             f.write(rosmaster_list)
@@ -164,7 +164,7 @@ def get_all_the_ros_masters() -> str:
 
 def add_to_rosmaster_list(ros_port: str) -> bool:
     """
-    Function to add the specified port to the ROS_RL rosmaster port list.
+    Function to add the specified port to the RealROS rosmaster port list.
 
     Args:
         ros_port (str): The ROS_MASTER_URI port that needs to be added.
@@ -190,7 +190,7 @@ def add_to_rosmaster_list(ros_port: str) -> bool:
 
 def remove_from_rosmaster_list(ros_port: str) -> bool:
     """
-    Function to remove the specified port from the ROS_RL rosmaster port list.
+    Function to remove the specified port from the RealROS rosmaster port list.
 
     Args:
         ros_port (str): The ROS_MASTER_URI port that needs to be removed.
@@ -210,7 +210,7 @@ def remove_from_rosmaster_list(ros_port: str) -> bool:
         with open(env_file_path, 'w') as f:
             f.write(edited_ros_master_list)
 
-        rospy.loginfo("Removed the port: " + ros_port + " from the ROS_RL rosmaster port list!")
+        rospy.loginfo("Removed the port: " + ros_port + " from the RealROS rosmaster port list!")
 
         return True
     else:
@@ -833,7 +833,7 @@ def init_robot_state_publisher(ns: str = "/", max_pub_freq: float = None, launch
 
 def remove_all_from_rosmaster_list() -> bool:
     """
-    Function to remove all ports from the ROS_RL rosmaster port list.
+    Function to remove all ports from the RealROS rosmaster port list.
 
     Returns:
         bool: True if all ports were removed successfully, False otherwise.
@@ -845,6 +845,6 @@ def remove_all_from_rosmaster_list() -> bool:
     with open(env_file_path, 'w') as f:
         f.write('')
 
-    rospy.loginfo("Removed all ports from the ROS_RL rosmaster port list!")
+    rospy.loginfo("Removed all ports from the RealROS rosmaster port list!")
 
     return True

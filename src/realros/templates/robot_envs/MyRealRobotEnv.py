@@ -5,35 +5,35 @@ import rostopic
 from gym import spaces
 from gym.envs.registration import register
 
-# core modules of the framework
-from ros_rl.utils.moveit_ros_rl import MoveitROS_RL
-from ros_rl.utils import ros_common
-from ros_rl.utils import ros_controllers
-from ros_rl.utils import ros_markers
+from realros.envs import RealBaseEnv
 
-from ros_rl.envs import RealGoalEnv
+# core modules of the framework
+from realros.utils.moveit_realros import MoveitRealROS
+from realros.utils import ros_common
+from realros.utils import ros_controllers
+from realros.utils import ros_markers
 
 """
 Although it is best to register only the task environment, one can also register the robot environment. 
 This is not necessary, but we can see if this section works by calling "gym.make" this env.
 """
 register(
-    id='MyRealRobotGoalEnv-v0',
-    entry_point='ros_rl.templates.robot_envs.MyRealRobotGoalEnv:MyRealRobotGoalEnv',
+    id='MyRealRobotEnv-v0',
+    entry_point='realros.templates.robot_envs.MyRealRobotEnv:MyRealRobotEnv',
     max_episode_steps=100,
 )
 
 
-class MyRealRobotGoalEnv(RealGoalEnv.RealGoalEnv):
+class MyRealRobotEnv(RealBaseEnv.RealBaseEnv):
     """
-    Custom Robot Goal Env, use this class to describe the robots and the sensors in the Environment.
-    Superclass for all Robot Goal environments.
+    Custom Robot Env, use this class to describe the robots and the sensors in the Environment.
+    Superclass for all Robot environments.
     """
 
     def __init__(self, ros_port: str = None, seed: int = None, reset_env_prompt: bool = False,
                  close_env_prompt: bool = False, action_cycle_time: float = 0.0):
         """
-        Initializes a new Robot Goal Environment
+        Initializes a new Robot Environment
 
         Describe the robot and the sensors used in the env.
 
@@ -43,10 +43,10 @@ class MyRealRobotGoalEnv(RealGoalEnv.RealGoalEnv):
         Actuators Topic List:
             MoveIt! : MoveIt! action server is used to send the joint positions to the robot.
         """
-        rospy.loginfo("Start Init Custom Robot Goal Env")
+        rospy.loginfo("Start Init Custom Robot Env")
 
         """
-        Change the ros master
+        Change the ros/gazebo master
         """
         if ros_port is not None:
             ros_common.change_ros_master(ros_port=ros_port)
@@ -121,7 +121,7 @@ class MyRealRobotGoalEnv(RealGoalEnv.RealGoalEnv):
         # reset_env_prompt = False
 
         """
-        Init MyRobotGoalEnv.
+        Init GazeboBaseEnv.
         """
         super().__init__(
             load_robot=load_robot, robot_pkg_name=robot_pkg_name, robot_launch_file=robot_launch_file,
@@ -141,9 +141,9 @@ class MyRealRobotGoalEnv(RealGoalEnv.RealGoalEnv):
         # self.joint_state_sub = rospy.Subscriber(self.joint_state_topic, JointState, self.joint_state_callback)
         # self.joint_state = JointState()
 
-        # example: a moveit package
+        # example: moveit package
         # ros_common.ros_launch_launcher(pkg_name="interbotix_xsarm_moveit_interface",
-        #                                launch_file_name="moveit_interface.launch",
+        #                                launch_file_name="xsarm_moveit_interface.launch",
         #                                args=["robot_model:=rx200", "dof:=5", "use_python_interface:=true",
         #                                      "use_moveit_rviz:=false"])
 
@@ -164,7 +164,7 @@ class MyRealRobotGoalEnv(RealGoalEnv.RealGoalEnv):
         """
 
         # example - Moveit object
-        # self.moveit_robot_object = MoveitROS_RL(arm_name='arm_group',
+        # self.moveit_robot_object = MoveitRealROS(arm_name='arm_group',
         #                                         gripper_name='gripper_group',
         #                                         robot_description="namespace/robot_description",
         #                                         ns="namespace")
@@ -172,7 +172,7 @@ class MyRealRobotGoalEnv(RealGoalEnv.RealGoalEnv):
         """
         Finished __init__ method
         """
-        rospy.loginfo("End Init Custom Robot Goal Env")
+        rospy.loginfo("End Init Custom Robot Env")
 
     # ---------------------------------------------------
     #   Custom methods for the Custom Robot Environment
@@ -239,23 +239,17 @@ class MyRealRobotGoalEnv(RealGoalEnv.RealGoalEnv):
         """
         raise NotImplementedError()
 
-    def compute_reward(self, achieved_goal, desired_goal, info) -> float:
+    def _get_reward(self):
         """
-        Compute the reward for achieving a given goal.
+        Function to get a reward from the environment.
 
         This method should be implemented by subclasses to return a scalar reward value representing how well the agent
         is doing in the current episode. The reward could be based on the distance to a goal, the amount of time taken
         to reach a goal, or any other metric that can be used to measure how well the agent is doing.
 
-        Args:
-            achieved_goal (Any): The achieved goal representing the current state of the environment.
-            desired_goal (Any): The desired goal representing the target state of the environment.
-            info (dict): Additional information about the environment.
-
         Returns:
-            reward (float): The reward for achieving the given goal.
+            A scalar reward value representing how well the agent is doing in the current episode.
         """
-
         raise NotImplementedError()
 
     def _is_done(self):
@@ -278,23 +272,5 @@ class MyRealRobotGoalEnv(RealGoalEnv.RealGoalEnv):
         This method should be implemented by subclasses to set any initial parameters or state variables for the
         environment. This could include resetting joint positions, resetting sensor readings, or any other initial
         setup that needs to be performed at the start of each episode.
-        """
-        raise NotImplementedError()
-
-    def _get_achieved_goal(self):
-        """
-        Get the achieved goal from the environment.
-
-        Returns:
-            achieved_goal (Any): The achieved goal representing the current state of the environment.
-        """
-        raise NotImplementedError()
-
-    def _get_desired_goal(self):
-        """
-        Get the desired goal from the environment.
-
-        Returns:
-            desired_goal (Any): The desired goal representing the target state of the environment.
         """
         raise NotImplementedError()

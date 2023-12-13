@@ -4,7 +4,7 @@ import gym
 from multiprocessing import Process, Pipe
 
 """
-    This is the main class for the ROS_RL package. 
+    This is the main class for the RealROS package. 
     It is a wrapper around the OpenAI Gym environment class.
     It allows the user to create an instance of the environment in a separate process.
     This is useful when the environment is a ROS node that needs to be run in a separate process.
@@ -12,13 +12,13 @@ from multiprocessing import Process, Pipe
     The methods and attributes are forwarded to the environment in the worker process.
 
     Usage:
-        from ros_rl.core import ros_rl_gym as gym
+        from realros.core import realros_gym as gym
         env = gym.make("env_name", args)
         env.reset()
 """
 
 
-class ros_rl_gym:
+class realros_gym:
     def __init__(self, env_name, *args, **kwargs):
         # Create a pipe for communication between the main process and the worker process
         self.parent_conn, self.child_conn = Pipe()

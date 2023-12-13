@@ -6,18 +6,17 @@ import numpy as np
 from gym import spaces
 
 # Custom robot env
-from ros_rl.templates.robot_envs import MyRealRobotEnv
+from realros.templates.robot_envs import MyRealRobotEnv
 
 # core modules of the framework
-from ros_rl.utils import ros_common
-# from ros_rl.utils.moveit_ros_rl import MoveitROS_RL
-# from ros_rl.utils import ros_controllers
-from ros_rl.utils import ros_markers
+from realros.utils import ros_common
+# from realros.utils import ros_controllers
+from realros.utils import ros_markers
 
 # Register your environment using the OpenAI register method to utilize gym.make("TaskEnv-v0").
 register(
     id='MyRealTaskEnv-v0',
-    entry_point='ros_rl.templates.task_envs.MyRealTaskEnv:MyRealTaskEnv',
+    entry_point='realros.templates.task_envs.MyRealTaskEnv:MyRealTaskEnv',
     max_episode_steps=100,
 )
 
