@@ -1,8 +1,8 @@
-# ROS_RL: A Comprehensive Framework for Real-World Robotic Reinforcement Learning
+# RealROS: A Comprehensive Framework for Real-World Robotic Reinforcement Learning
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-ROS_RL, is a unified ([ROS](http://wiki.ros.org/))-based open-source Python framework to create real-world robotics environments for reinforcement learning (RL) applications.
+RealROS, is a unified ([ROS](http://wiki.ros.org/))-based open-source Python framework to create real-world robotics environments for reinforcement learning (RL) applications.
 
 This framework extends the functionality of ROS by introducing additional Python bindings necessary for automatically launching environments in the real world, eliminating the need for manual configuration of the ROS's low-level features.
 
@@ -13,11 +13,11 @@ This framework provides the following features:
 
 ## Prerequisites
 
-Before installing ROS_RL, make sure you have the following prerequisites:
+Before installing RealROS, make sure you have the following prerequisites:
 
 ### ROS Installation
 
-ROS_RL requires a working installation of ROS. If you haven't installed ROS yet, please follow the official [ROS installation guide](http://wiki.ros.org/ROS/Installation) for your specific operating system. This package has been tested with [ROS Noetic](http://wiki.ros.org/noetic) version, and the following instructions will guide you through the installation of ROS Noetic on Ubuntu 20.04:
+RealROS requires a working installation of ROS. If you haven't installed ROS yet, please follow the official [ROS installation guide](http://wiki.ros.org/ROS/Installation) for your specific operating system. This package has been tested with [ROS Noetic](http://wiki.ros.org/noetic) version, and the following instructions will guide you through the installation of ROS Noetic on Ubuntu 20.04:
 ```shell
 sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
 sudo apt install curl
@@ -34,13 +34,13 @@ sudo rosdep init
 rosdep update
 ```
 ### Catkin Tools
-ROS_RL uses Catkin as the build system for ROS packages. Install Catkin Tools by running the following command:
+RealROS uses Catkin as the build system for ROS packages. Install Catkin Tools by running the following command:
 ```shell
 sudo apt-get install python3-catkin-tools
 ```
 
 ### Create ROS Workspace
-Before using ROS_RL, you need to create a ROS workspace to build and run your ROS packages. Follow these steps to create a workspace:
+Before using RealROS, you need to create a ROS workspace to build and run your ROS packages. Follow these steps to create a workspace:
 ```shell
 cd ~
 source /opt/ros/noetic/setup.bash
@@ -52,7 +52,7 @@ source ~/.bashrc
 ```
 
 ### Other Packages 
-ROS_RL also requires the following additional packages:
+RealROS also requires the following additional packages:
 - XTerm for terminal emulation:
     ```shell
     sudo apt install xterm
@@ -98,28 +98,28 @@ ROS_RL also requires the following additional packages:
     source devel/setup.bash
   ```
 
-You are now ready to proceed with the installation and usage of ROS_RL.
+You are now ready to proceed with the installation and usage of RealROS.
 
 Please note that the instructions assume you are using Ubuntu 20.04 and ROS Noetic. If you are using a different operating system or ROS version, make sure to adapt the commands accordingly.
 
 ## Installation
 
-To get started with ROS_RL, follow these steps:
+To get started with RealROS, follow these steps:
 
 1. Clone the repository:
     ```shell
     cd ~/catkin_ws/src
-    git clone https://github.com/ncbdrck/ros_rl.git
+    git clone https://github.com/ncbdrck/realros.git
     ```
 
-2. ROS_RL relies on several Python packages. You can install them by running the following command:
+2. RealROS relies on several Python packages. You can install them by running the following command:
 
     ```shell
     # Install pip if you haven't already by running this command
     sudo apt-get install python3-pip
 
-    # install the required Python packages for ROS_RL by running
-    cd ~/catkin_ws/src/ros_rl/
+    # install the required Python packages for RealROS by running
+    cd ~/catkin_ws/src/realros/
     pip3 install -r requirements.txt
     ```
 3. Build the ROS packages and source the environment:
@@ -132,10 +132,10 @@ To get started with ROS_RL, follow these steps:
    
 ## Usage
 
-You can refer to the [templates](https://github.com/ncbdrck/ros_rl/tree/main/src/ros_rl/templates) or the [examples](https://github.com/ncbdrck/reactorx200_ros_reacher) to see how to use ROS_RL to create a real-world environment for RL applications.
+You can refer to the [templates](https://github.com/ncbdrck/realros/tree/main/src/realros/templates) or the [examples](https://github.com/ncbdrck/reactorx200_ros_reacher) to see how to use RealROS to create a real-world environment for RL applications.
 
 It also showcases:
-- How to use ROS_RL to create a real-world environment for RL applications.
+- How to use RealROS to create a real-world environment for RL applications.
 - Train the Rx200 robot directly in the real world to perform a simple reach task.
 - Use [MultiROS](https://github.com/ncbdrck/multiros) framework to create a simulation environment for the same robot and train it in the simulation environment. Then, transfer the learned policy to the real-world environment.
 - Train both environments (sim and real) in real-time to obtain a generalized policy that performs well in both environments.
@@ -144,27 +144,27 @@ The installation instructions for the examples are provided in the respective re
 
 ## License
 
-ROS_RL is released under the [MIT License](https://opensource.org/licenses/MIT). Please see the LICENSE file for more details.
+RealROS is released under the [MIT License](https://opensource.org/licenses/MIT). Please see the LICENSE file for more details.
 
 ## Acknowledgements
 
-We would like to thank the following projects and communities for their valuable contributions, as well as the authors of relevant libraries and tools used in ROS_RL.
+We would like to thank the following projects and communities for their valuable contributions, as well as the authors of relevant libraries and tools used in RealROS.
 - [ROS (Robot Operating System)](https://www.ros.org/)
 - [MoveIt](https://moveit.ros.org/)
 
 
 ## Cite
 
-If you use ROS_RL in your research or work and would like to cite it, you can use the following citation:
+If you use RealROS in your research or work and would like to cite it, you can use the following citation:
 
 Repository
 ```bibtex
-@misc{ros_rl,
+@misc{realros,
   author = {Kapukotuwa, Jayasekara},
   booktitle = {GitHub repository},
   publisher = {GitHub},
-  title = {ROS_RL: A Comprehensive Framework for Real-World Robotic Reinforcement Learning},
-  url = {https://github.com/ncbdrck/ros_rl},
+  title = {RealROS: A Comprehensive Framework for Real-World Robotic Reinforcement Learning},
+  url = {https://github.com/ncbdrck/realros},
   year = {2023}
 }
 ```
