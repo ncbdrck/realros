@@ -20,8 +20,9 @@ It has the following functions,
     15. load_urdf: Load a URDF into the parameter server or a string containing the processed URDF data
     16. is_roscore_running: Check if a roscore is currently running
     17. change_ros_master: Set the current ROS Master Environment Variable.
-    18. init_robot_state_publisher: Initialize the robot state publisher.
-    19. remove_all_from_rosmaster_list: Remove all ports from the Multiros rosmaster port list.
+    18. change_ros_master_multi_device: Set the current ROS Master Environment Variable for multi-device
+    19. init_robot_state_publisher: Initialize the robot state publisher.
+    20. remove_all_from_rosmaster_list: Remove all ports from the Multiros rosmaster port list.
 
 """
 import rosparam
