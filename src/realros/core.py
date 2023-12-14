@@ -78,11 +78,11 @@ class realros_gym:
 
     @classmethod
     def make(cls, env_name, *args, **kwargs):
-        # Create an instance of the multiros_gym class and pass it the environment name and any additional arguments
+        # Create an instance of the realros_gym class and pass it the environment name and any additional arguments
         env = cls(env_name, *args, **kwargs)
         # Receive the observation and action spaces from the worker process and set them on the instance
         env.observation_space, env.action_space = env.parent_conn.recv()
-        # Return the instance of the multiros_gym class
+        # Return the instance of the realros_gym class
         return env
 
     def step(self, action):
