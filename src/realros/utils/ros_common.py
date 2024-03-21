@@ -12,10 +12,10 @@ It has the following functions,
     07. kill_all_ros_nodes: Kill all running ROS nodes of a specified or the current ROS master.
     08. kill_ros_node: Kill a single ROS node of a given or current ROS master.
     09. ros_kill_master: Kill a ROS master
-    10. clean_ros_logs: Clean all the ros logs
+    10. clean_ros_logs: Clean all ros logs
     11. source_workspace: Source a ros workspace
     12. ros_launch_launcher: Execute a roslaunch with args
-    13. ros_node_launcher: Launch a ROS node from a package
+    13. ros_node_launcher: Launch a ROS node from ROS package
     14. ros_load_yaml: Fetch a YAML file from a package or a path and load it into the ROS Parameter Server.
     15. load_urdf: Load a URDF into the parameter server or a string containing the processed URDF data
     16. is_roscore_running: Check if a roscore is currently running
@@ -144,7 +144,7 @@ def get_all_the_ros_masters() -> str:
         str: List of all the active rosmaster ports.
     """
 
-    # Define the path to the file where the all the active rosmaster ports will be stored
+    # Define the path to the file where all the active rosmaster ports will be stored
     env_file_path = '/tmp/ros_master_ports_multiros.txt'
 
     # Get the currently opened rosmaster ports from the temp file
@@ -199,7 +199,7 @@ def remove_from_rosmaster_list(ros_port: str) -> bool:
         bool: True if the port was removed successfully, False otherwise.
     """
 
-    # Define the path to the file where the all the active rosmaster ports will be stored
+    # Define the path to the file where all the active rosmaster ports will be stored
     env_file_path = '/tmp/ros_master_ports_multiros.txt'
 
     ROSMASTER_LIST = get_all_the_ros_masters()
@@ -839,7 +839,7 @@ def remove_all_from_rosmaster_list() -> bool:
         bool: True if all ports were removed successfully, False otherwise.
     """
 
-    # Define the path to the file where the all the active rosmaster ports will be stored
+    # Define the path to the file where all the active rosmaster ports will be stored
     env_file_path = '/tmp/ros_master_ports_multiros.txt'
 
     with open(env_file_path, 'w') as f:
