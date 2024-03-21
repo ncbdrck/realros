@@ -1,17 +1,16 @@
 #!/bin/python3
 import time
 import rospy
-import gym
-from gym.utils import seeding
+import gymnasium as gym
 
 from realros.utils import ros_common
 from realros.utils import ros_controllers
-from typing import List
+from typing import List, Any
 
 
 class RealBaseEnv(gym.Env):
     """
-    A custom OpenAI Gym environment for reinforcement learning using ROS and real robots.
+    A custom gymnasium environment for reinforcement learning using ROS and real robots.
     """
 
     def __init__(self, load_robot: bool = True, robot_pkg_name: str = None,
@@ -51,8 +50,8 @@ class RealBaseEnv(gym.Env):
             clean_logs (bool): Whether to clean the ROS logs when closing the environment.
             ros_port (str): The port number to use for the ROS master.
             seed (int): The seed for the random number generator.
-            reset_env_prompt (bool): Whether to prompt the user for resetting the environment.
-            close_env_prompt (bool): Whether to prompt the user for closing the environment.
+            reset_env_prompt (bool): Whether to prompt the user to resetting the environment.
+            close_env_prompt (bool): Whether to prompt the user to closing the environment.
             action_cycle_time (float): The time to wait between applying actions.
 
         """
@@ -76,11 +75,12 @@ class RealBaseEnv(gym.Env):
         Initialize the variables
         """
         self.ros_port = ros_port
-        self.random_seed = seed
+        self.user_seed = seed
         self.action_cycle_time = action_cycle_time
 
         self.info = {}
-        self.done = None
+        self.terminated = None
+        self.truncated = None
         self.reward = 0.0
         self.observation = None
 
@@ -92,7 +92,7 @@ class RealBaseEnv(gym.Env):
         Function to initialise the environment.
         """
 
-        # Init gym.Env
+        # Init gymnasium.Env
         super().__init__()
 
         self.namespace = namespace
@@ -103,15 +103,6 @@ class RealBaseEnv(gym.Env):
         self.reset_controllers_prompt = reset_controllers_prompt
         self.reset_env_prompt = reset_env_prompt
         self.close_env_prompt = close_env_prompt
-
-        # --------- Seed the random number generator
-        self.np_random = None
-
-        # defined in Task Env
-        if self.random_seed is not None:
-            self.seed(self.random_seed)
-        else:
-            self.seed()
 
         """
         Load the real robot using a launch file 
@@ -182,19 +173,6 @@ class RealBaseEnv(gym.Env):
 
         rospy.loginfo(self.CYAN + "End init RealBaseEnv" + self.ENDC)
 
-    def seed(self, seed: int = None):
-        """
-        Seed the random number generator for the environment.
-
-        Args:
-            seed (int): The seed for the random number generator.
-
-        Returns:
-            seeds (List[int]): The list of seeds used by the random number generator.
-        """
-        self.np_random, seed = seeding.np_random(seed)
-        return [seed]
-
     def step(self, action):
         """
         Take a step in the environment.
@@ -205,7 +183,9 @@ class RealBaseEnv(gym.Env):
         Returns:
             observation (Any): The observation representing the current state of the environment.
             reward (float): The reward for taking the given action.
-            done (bool): Whether the episode has ended.
+            terminated (bool): Whether the agent reaches the terminal state.
+            truncated (bool): Whether the episode is truncated due to various reasons.
+            (e.g. reaching the maximum number of steps, or end before the terminal state)
             info (dict): Additional information about the environment.
         """
 
@@ -223,24 +203,38 @@ class RealBaseEnv(gym.Env):
         if self.action_cycle_time > 0.0:
             rospy.sleep(self.action_cycle_time)
 
-        # Get the observation, reward, and done flag
+        # Get the observation, reward and terminated, truncated flags
         self.info = {}
         self.observation = self._get_observation()
-        self.reward = self._get_reward()
-        self.done = self._is_done()
-        
+        self.reward = self._get_reward(info=self.info)
+        self.terminated = self._compute_terminated(info=self.info)
+        self.truncated = self._compute_truncated(info=self.info)
 
         # rospy.loginfo(self.MAGENTA + "*************** End Step Env" + self.ENDC)
 
-        return self.observation, self.reward, self.done, self.info
+        return self.observation, self.reward, self.terminated, self.truncated, self.info
 
-    def reset(self):
+    def reset(self, seed: int | None = None, options: dict[str, Any] | None = None):
         """
         Reset the environment.
 
+        Args:
+            seed (int): The seed for the random number generator.
+            options (dict): Additional information for resetting the environment.
+
         Returns:
             observation (Any): The initial observation representing the state of the environment.
+            info (dict): Additional information about the environment. Similar to the info returned by step().
         """
+
+        # set the seed (standard way to set the seed in gymnasium)
+        if self.user_seed is not None:
+            super().reset(seed=self.user_seed)
+        else:
+            super().reset(seed=seed)
+
+        # reinitialize the info dictionary
+        self.info = {}
 
         # --------- Change the ros master
         if self.ros_port is not None:
@@ -263,13 +257,13 @@ class RealBaseEnv(gym.Env):
             ros_controllers.reset_controllers(controller_list=self.controllers_list, ns=self.namespace)
 
         self._check_connection_and_readiness()
-        self._set_init_params()
+        self._set_init_params(options=options)
 
         self.observation = self._get_observation()
 
         rospy.loginfo(self.MAGENTA + "*************** End Reset Env" + self.ENDC)
 
-        return self.observation
+        return self.observation, self.info
 
     def close(self):
         """
@@ -329,7 +323,7 @@ class RealBaseEnv(gym.Env):
         """
         raise NotImplementedError()
 
-    def _get_reward(self):
+    def _get_reward(self, info: dict[str, Any] | None = None):
         """
         Function to get a reward from the environment.
 
@@ -337,17 +331,23 @@ class RealBaseEnv(gym.Env):
         is doing in the current episode. The reward could be based on the distance to a goal, the amount of time taken
         to reach a goal, or any other metric that can be used to measure how well the agent is doing.
 
+        Args:
+            info (dict): Additional information for computing the reward.
+
         Returns:
             A scalar reward value representing how well the agent is doing in the current episode.
         """
         raise NotImplementedError()
 
-    def _is_done(self):
+    def _compute_terminated(self, info: dict[str, Any] | None = None):
         """
-        Function to check if the episode is done.
+        Function to check if the episode is terminated due to reaching a terminal state.
 
         This method should be implemented by subclasses to return a boolean value indicating whether the episode has
         ended (e.g., because a goal has been reached or a failure condition has been triggered).
+
+        Args:
+            info (dict): Additional information for computing the termination condition.
 
         Returns:
             A boolean value indicating whether the episode has ended
@@ -355,13 +355,34 @@ class RealBaseEnv(gym.Env):
         """
         raise NotImplementedError()
 
-    def _set_init_params(self):
+    def _compute_truncated(self, info: dict[str, Any] | None = None):
+        """
+        Function to check if the episode is truncated due non-terminal reasons.
+
+        This method should be implemented by subclasses to return a boolean value indicating whether the episode has
+        been truncated due to reasons other than reaching a terminal state.
+        Truncated states are those that are out of the scope of the Markov Decision Process (MDP).
+        This could include truncation due to reaching a maximum number of steps, or any other non-terminal condition
+        that causes the episode to end early.
+
+        Args:
+            info (dict): Additional information for computing the truncation condition.
+
+        Returns:
+            A boolean value indicating whether the episode has been truncated.
+        """
+        raise NotImplementedError()
+
+    def _set_init_params(self, options: dict[str, Any] | None = None):
         """
         Set initial parameters for the environment.
 
         This method should be implemented by subclasses to set any initial parameters or state variables for the
         environment. This could include resetting joint positions, resetting sensor readings, or any other initial
         setup that needs to be performed at the start of each episode.
+
+        Args:
+            options (dict): Additional options for setting the initial parameters.
         """
         raise NotImplementedError()
 
