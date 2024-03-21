@@ -1,4 +1,4 @@
-import gym
+import gymnasium as gym
 import numpy as np
 
 
@@ -25,13 +25,13 @@ class NormalizeObservationWrapper(gym.ObservationWrapper):
 
         self.normalize_goal_spaces = normalize_goal_spaces
 
-        # check if it is gym.Env based
+        # check if it is gymnasium.Env based
         if isinstance(env.observation_space, gym.spaces.Box):
             self.observation_space = gym.spaces.Box(low=-1.0, high=1.0, shape=env.observation_space.shape,
                                                     dtype=np.float32)
             self.normalize_observation = self._normalize_box_observation
 
-        # check if it is gym.GoalEnv based
+        # check if it is gymnasium_robotics.GoalEnv based
         elif isinstance(env.observation_space, gym.spaces.Dict):
             self.observation_space = gym.spaces.Dict({
                 'observation': gym.spaces.Box(low=-1.0, high=1.0, shape=env.observation_space['observation'].shape,
