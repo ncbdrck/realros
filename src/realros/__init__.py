@@ -4,5 +4,5 @@ from realros.wrappers import normalize_action_wrapper, normalize_obs_wrapper, ti
 from realros import core
 
 # To use this package similar to gym.make
-from realros.core import realros_gym
-make = realros_gym.make
+from realros.core import RealrosGym
+make = RealrosGym.make
