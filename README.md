@@ -109,7 +109,7 @@ To get started with RealROS, follow these steps:
 1. Clone the repository:
     ```shell
     cd ~/catkin_ws/src
-    git clone https://github.com/ncbdrck/realros.git
+    git clone -b gymnasium https://github.com/ncbdrck/realros.git
     ```
 
 2. RealROS relies on several Python packages. You can install them by running the following command:
