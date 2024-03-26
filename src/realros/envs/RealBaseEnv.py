@@ -5,7 +5,7 @@ import gymnasium as gym
 
 from realros.utils import ros_common
 from realros.utils import ros_controllers
-from typing import List, Any
+from typing import List, Any, Dict, Optional
 
 
 class RealBaseEnv(gym.Env):
@@ -214,7 +214,7 @@ class RealBaseEnv(gym.Env):
 
         return self.observation, self.reward, self.terminated, self.truncated, self.info
 
-    def reset(self, seed: int | None = None, options: dict[str, Any] | None = None):
+    def reset(self, seed: Optional[int] = None, options: Optional[Dict[str, Any]] = None):
         """
         Reset the environment.
 
@@ -323,9 +323,9 @@ class RealBaseEnv(gym.Env):
         """
         raise NotImplementedError()
 
-    def _get_reward(self, info: dict[str, Any] | None = None):
+    def _get_reward(self, info: Optional[Dict[str, Any]] = None):
         """
-        Function to get a reward from the environment.
+        Function to compute a reward from the environment.
 
         This method should be implemented by subclasses to return a scalar reward value representing how well the agent
         is doing in the current episode. The reward could be based on the distance to a goal, the amount of time taken
@@ -339,7 +339,7 @@ class RealBaseEnv(gym.Env):
         """
         raise NotImplementedError()
 
-    def _compute_terminated(self, info: dict[str, Any] | None = None):
+    def _compute_terminated(self, info: Optional[Dict[str, Any]] = None):
         """
         Function to check if the episode is terminated due to reaching a terminal state.
 
@@ -355,7 +355,7 @@ class RealBaseEnv(gym.Env):
         """
         raise NotImplementedError()
 
-    def _compute_truncated(self, info: dict[str, Any] | None = None):
+    def _compute_truncated(self, info: Optional[Dict[str, Any]] = None):
         """
         Function to check if the episode is truncated due non-terminal reasons.
 
@@ -373,7 +373,7 @@ class RealBaseEnv(gym.Env):
         """
         raise NotImplementedError()
 
-    def _set_init_params(self, options: dict[str, Any] | None = None):
+    def _set_init_params(self, options: Optional[Dict[str, Any]] = None):
         """
         Set initial parameters for the environment.
 

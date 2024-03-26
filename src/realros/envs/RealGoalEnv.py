@@ -4,7 +4,7 @@ import rospy
 import gymnasium_robotics
 from realros.utils import ros_common
 from realros.utils import ros_controllers
-from typing import List, Any
+from typing import List, Any, Dict, Optional
 import time
 
 
@@ -218,7 +218,7 @@ class RealGoalEnv(gymnasium_robotics.GoalEnv):
         return {'observation': self.observation, 'achieved_goal': self.achieved_goal,
                 'desired_goal': self.desired_goal}, self.reward, self.terminated, self.truncated, self.info
 
-    def reset(self, seed: int | None = None, options: dict[str, Any] | None = None):
+    def reset(self, seed: Optional[int] = None, options: Optional[Dict[str, Any]] = None):
         """
         Reset the environment.
 
@@ -367,7 +367,7 @@ class RealGoalEnv(gymnasium_robotics.GoalEnv):
         """
         raise NotImplementedError()
 
-    def _set_init_params(self, options: dict[str, Any] | None = None):
+    def _set_init_params(self, options: Optional[Dict[str, Any]] = None):
         """
         Set initial parameters for the environment.
 
