@@ -61,6 +61,10 @@ RealROS also requires the following additional packages:
     ```shell
     sudo apt install ros-noetic-moveit
     ```
+- [PyKDL](https://github.com/orocos/orocos_kinematics_dynamics) for Kinematics:
+    ```shell
+  sudo apt install python3-pykdl
+    ```
 - [kdl_parser_py](http://wiki.ros.org/kdl_parser_py) for parsing URDF files (for ros_kinematics):
     ```shell
     sudo apt install ros-noetic-kdl-parser-py
