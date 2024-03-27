@@ -4,7 +4,7 @@ import rospy
 import rostopic
 from gymnasium import spaces
 from gymnasium.envs.registration import register
-from typing import Any
+from typing import Optional, List, Any, Dict
 
 from realros.envs import RealBaseEnv
 
@@ -13,6 +13,7 @@ from realros.utils.moveit_realros import MoveitRealROS
 from realros.utils import ros_common
 from realros.utils import ros_controllers
 from realros.utils import ros_markers
+from realros.utils import ros_kinematics
 
 """
 Although it is best to register only the task environment, one can also register the robot environment. 
@@ -240,7 +241,7 @@ class MyRealRobotEnv(RealBaseEnv.RealBaseEnv):
         """
         raise NotImplementedError()
 
-    def _get_reward(self, info: dict[str, Any] | None = None):
+    def _get_reward(self, info: Optional[Dict[str, Any]] = None):
         """
         Function to get a reward from the environment.
 
@@ -256,7 +257,7 @@ class MyRealRobotEnv(RealBaseEnv.RealBaseEnv):
         """
         raise NotImplementedError()
 
-    def _compute_terminated(self, info: dict[str, Any] | None = None):
+    def _compute_terminated(self, info: Optional[Dict[str, Any]] = None):
         """
         Function to check if the episode is terminated due to reaching a terminal state.
 
@@ -272,7 +273,7 @@ class MyRealRobotEnv(RealBaseEnv.RealBaseEnv):
         """
         raise NotImplementedError()
 
-    def _compute_truncated(self, info: dict[str, Any] | None = None):
+    def _compute_truncated(self, info: Optional[Dict[str, Any]] = None):
         """
         Function to check if the episode is truncated due non-terminal reasons.
 
@@ -290,7 +291,7 @@ class MyRealRobotEnv(RealBaseEnv.RealBaseEnv):
         """
         raise NotImplementedError()
 
-    def _set_init_params(self, options: dict[str, Any] | None = None):
+    def _set_init_params(self, options: Optional[Dict[str, Any]] = None):
         """
         Set initial parameters for the environment.
 

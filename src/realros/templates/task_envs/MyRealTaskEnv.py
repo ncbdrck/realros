@@ -4,7 +4,7 @@ import rospy
 from gymnasium.envs.registration import register
 import numpy as np
 from gymnasium import spaces
-from typing import Any
+from typing import Optional, List, Any, Dict
 
 # Custom robot env
 from realros.templates.robot_envs import MyRealRobotEnv
@@ -144,7 +144,7 @@ class MyRealTaskEnv(MyRealRobotEnv.MyRealRobotEnv):
     # -------------------------------------------------------
     #   Methods for interacting with the environment
 
-    def _set_init_params(self, options: dict[str, Any] | None = None):
+    def _set_init_params(self, options: Optional[Dict[str, Any]] = None):
         """
         Set initial parameters for the environment.
 
@@ -183,7 +183,7 @@ class MyRealTaskEnv(MyRealRobotEnv.MyRealRobotEnv):
         """
         raise NotImplementedError()
 
-    def _get_reward(self, info: dict[str, Any] | None = None):
+    def _get_reward(self, info: Optional[Dict[str, Any]] = None):
         """
         Function to get a reward from the environment.
 
@@ -199,7 +199,7 @@ class MyRealTaskEnv(MyRealRobotEnv.MyRealRobotEnv):
         """
         raise NotImplementedError()
 
-    def _compute_terminated(self, info: dict[str, Any] | None = None):
+    def _compute_terminated(self, info: Optional[Dict[str, Any]] = None):
         """
         Function to check if the episode is terminated due to reaching a terminal state.
 
@@ -215,7 +215,7 @@ class MyRealTaskEnv(MyRealRobotEnv.MyRealRobotEnv):
         """
         raise NotImplementedError()
 
-    def _compute_truncated(self, info: dict[str, Any] | None = None):
+    def _compute_truncated(self, info: Optional[Dict[str, Any]] = None):
         """
         Function to check if the episode is truncated due non-terminal reasons.
 

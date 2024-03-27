@@ -4,7 +4,7 @@ import rospy
 import rostopic
 from gymnasium import spaces
 from gymnasium.envs.registration import register
-from typing import Any
+from typing import List, Any, Dict, Optional
 
 # core modules of the framework
 from realros.utils.moveit_realros import MoveitRealROS
@@ -297,7 +297,7 @@ class MyRealRobotGoalEnv(RealGoalEnv.RealGoalEnv):
         """
         raise NotImplementedError()
 
-    def _set_init_params(self, options: dict[str, Any] | None = None):
+    def _set_init_params(self, options: Optional[Dict[str, Any]] = None):
         """
         Set initial parameters for the environment.
 
