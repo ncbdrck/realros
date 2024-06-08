@@ -21,7 +21,7 @@ class RealGoalEnv(gymnasium_robotics.GoalEnv):
                  load_controllers: bool = False, controllers_file: str = None, controllers_list: List[str] = None,
                  reset_controllers: bool = False, reset_controllers_prompt: bool = False, kill_rosmaster: bool = True,
                  clean_logs: bool = False, ros_port: str = None, seed: int = None, reset_env_prompt: bool = False,
-                 close_env_prompt: bool = False, action_cycle_time: float = 0.0):
+                 close_env_prompt: bool = False, action_cycle_time: float = 0.0, log_internal_state: bool = False):
 
         """
         Initialize the RealGoalEnv environment.
@@ -52,6 +52,7 @@ class RealGoalEnv(gymnasium_robotics.GoalEnv):
             reset_env_prompt (bool): Whether to prompt the user to resetting the environment.
             close_env_prompt (bool): Whether to prompt the user to closing the environment.
             action_cycle_time (float): The time to wait between applying actions.
+            log_internal_state (bool): Whether to log the internal state of the environment.
 
         """
 
@@ -76,6 +77,7 @@ class RealGoalEnv(gymnasium_robotics.GoalEnv):
         self.ros_port = ros_port
         self.user_seed = seed
         self.action_cycle_time = action_cycle_time
+        self.log_internal_state = log_internal_state
 
         self.info = {}
         self.observation = None
@@ -244,7 +246,8 @@ class RealGoalEnv(gymnasium_robotics.GoalEnv):
             ros_common.change_ros_master(ros_port=self.ros_port)
 
         # ----- Reset the env
-        rospy.loginfo(self.MAGENTA + "*************** Start Reset Env" + self.ENDC)
+        if self.log_internal_state:
+            rospy.loginfo(self.MAGENTA + "*************** Start Reset Env" + self.ENDC)
 
         # Reset real env
         if self.reset_env_prompt:
@@ -266,7 +269,8 @@ class RealGoalEnv(gymnasium_robotics.GoalEnv):
         self.achieved_goal = self._get_achieved_goal()
         self.desired_goal = self._get_desired_goal()
 
-        rospy.loginfo(self.MAGENTA + "*************** End Reset Env" + self.ENDC)
+        if self.log_internal_state:
+            rospy.loginfo(self.MAGENTA + "*************** End Reset Env" + self.ENDC)
 
         return {'observation': self.observation, 'achieved_goal': self.achieved_goal,
                 'desired_goal': self.desired_goal}, self.info

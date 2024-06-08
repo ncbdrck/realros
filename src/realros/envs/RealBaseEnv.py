@@ -22,7 +22,7 @@ class RealBaseEnv(gym.Env):
                  controllers_file: str = None, controllers_list: List[str] = None, reset_controllers: bool = False,
                  reset_controllers_prompt: bool = False, kill_rosmaster: bool = True, clean_logs: bool = False,
                  ros_port: str = None, seed: int = None, reset_env_prompt: bool = False,
-                 close_env_prompt: bool = False, action_cycle_time: float = 0.0):
+                 close_env_prompt: bool = False, action_cycle_time: float = 0.0, log_internal_state: bool = False):
 
         """
         Initialize the RealBaseEnv.
@@ -53,6 +53,7 @@ class RealBaseEnv(gym.Env):
             reset_env_prompt (bool): Whether to prompt the user to resetting the environment.
             close_env_prompt (bool): Whether to prompt the user to closing the environment.
             action_cycle_time (float): The time to wait between applying actions.
+            log_internal_state (bool): Whether to log the internal state of the environment.
 
         """
 
@@ -77,6 +78,7 @@ class RealBaseEnv(gym.Env):
         self.ros_port = ros_port
         self.user_seed = seed
         self.action_cycle_time = action_cycle_time
+        self.log_internal_state = log_internal_state
 
         self.info = {}
         self.terminated = None
@@ -241,7 +243,8 @@ class RealBaseEnv(gym.Env):
             ros_common.change_ros_master(ros_port=self.ros_port)
 
         # ----- Reset the env
-        rospy.loginfo(self.MAGENTA + "*************** Start Reset Env" + self.ENDC)
+        if self.log_internal_state:
+            rospy.loginfo(self.MAGENTA + "*************** Start Reset Env" + self.ENDC)
 
         # Reset real env
         if self.reset_env_prompt:
@@ -261,7 +264,8 @@ class RealBaseEnv(gym.Env):
 
         self.observation = self._get_observation()
 
-        rospy.loginfo(self.MAGENTA + "*************** End Reset Env" + self.ENDC)
+        if self.log_internal_state:
+            rospy.loginfo(self.MAGENTA + "*************** End Reset Env" + self.ENDC)
 
         return self.observation, self.info
 
