@@ -22,7 +22,9 @@ class RealBaseEnv(gym.Env):
                  controllers_file: str = None, controllers_list: List[str] = None, reset_controllers: bool = False,
                  reset_controllers_prompt: bool = False, kill_rosmaster: bool = True, clean_logs: bool = False,
                  ros_port: str = None, seed: int = None, reset_env_prompt: bool = False,
-                 close_env_prompt: bool = False, action_cycle_time: float = 0.0, log_internal_state: bool = False):
+                 close_env_prompt: bool = False, action_cycle_time: float = 0.0, log_internal_state: bool = False,
+                 multi_device_mode: bool = False, remote_ip: str = None, local_ip: str = None
+                 ):
 
         """
         Initialize the RealBaseEnv.
@@ -54,6 +56,9 @@ class RealBaseEnv(gym.Env):
             close_env_prompt (bool): Whether to prompt the user to closing the environment.
             action_cycle_time (float): The time to wait between applying actions.
             log_internal_state (bool): Whether to log the internal state of the environment.
+            multi_device_mode (bool): Whether to run the environment in multi-device mode.
+            remote_ip (str): The IP address of the remote ROS master (if multi-device mode is enabled).
+            local_ip (str): The IP address of the local PC (if multi-device mode is enabled).
 
         """
 
@@ -75,6 +80,9 @@ class RealBaseEnv(gym.Env):
         """
         Initialize the variables
         """
+        self.multi_device_mode = multi_device_mode
+        self.remote_ip = remote_ip
+        self.local_ip = local_ip
         self.ros_port = ros_port
         self.user_seed = seed
         self.action_cycle_time = action_cycle_time
@@ -87,7 +95,14 @@ class RealBaseEnv(gym.Env):
         self.observation = None
 
         # --------- Change the ros master
-        if self.ros_port is not None:
+        if self.multi_device_mode:
+            if self.remote_ip is not None and self.local_ip is not None and self.ros_port is not None:
+                ros_common.change_ros_master_multi_device(remote_ip=remote_ip,
+                                                      local_ip=local_ip, remote_ros_port=ros_port)
+            else:
+                rospy.logerr("Remote IP and Local IP must be provided for multi-device mode.")
+
+        elif self.ros_port is not None:
             ros_common.change_ros_master(ros_port=self.ros_port)
 
         """
@@ -192,7 +207,14 @@ class RealBaseEnv(gym.Env):
         """
 
         # --------- Change the ros master
-        if self.ros_port is not None:
+        if self.multi_device_mode:
+            if self.remote_ip is not None and self.local_ip is not None and self.ros_port is not None:
+                ros_common.change_ros_master_multi_device(remote_ip=self.remote_ip,
+                                                          local_ip=self.local_ip, remote_ros_port=self.ros_port)
+            else:
+                rospy.logerr("Remote IP and Local IP must be provided for multi-device mode.")
+
+        elif self.ros_port is not None:
             ros_common.change_ros_master(ros_port=self.ros_port)
 
         # ----- Start the step env
@@ -239,7 +261,13 @@ class RealBaseEnv(gym.Env):
         self.info = {}
 
         # --------- Change the ros master
-        if self.ros_port is not None:
+        if self.multi_device_mode:
+            if self.remote_ip is not None and self.local_ip is not None and self.ros_port is not None:
+                ros_common.change_ros_master_multi_device(remote_ip=self.remote_ip,
+                                                          local_ip=self.local_ip, remote_ros_port=self.ros_port)
+            else:
+                rospy.logerr("Remote IP and Local IP must be provided for multi-device mode.")
+        elif self.ros_port is not None:
             ros_common.change_ros_master(ros_port=self.ros_port)
 
         # ----- Reset the env
@@ -275,7 +303,13 @@ class RealBaseEnv(gym.Env):
         """
 
         # --------- Change the ros master
-        if self.ros_port is not None:
+        if self.multi_device_mode:
+            if self.remote_ip is not None and self.local_ip is not None and self.ros_port is not None:
+                ros_common.change_ros_master_multi_device(remote_ip=self.remote_ip,
+                                                          local_ip=self.local_ip, remote_ros_port=self.ros_port)
+            else:
+                rospy.logerr("Remote IP and Local IP must be provided for multi-device mode.")
+        elif self.ros_port is not None:
             ros_common.change_ros_master(ros_port=self.ros_port)
 
         rospy.loginfo(self.CYAN + "*************** Start Closing Env" + self.ENDC)
@@ -289,7 +323,7 @@ class RealBaseEnv(gym.Env):
         rospy.signal_shutdown("Closing Environment")
 
         if self.kill_rosmaster:
-            if self.ros_port is not None:
+            if self.ros_port is not None and not self.multi_device_mode:
                 ros_common.ros_kill_master(ros_port=self.ros_port)
                 rospy.loginfo("Killed ROS Master!")
 
