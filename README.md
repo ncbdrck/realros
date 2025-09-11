@@ -168,6 +168,22 @@ We would like to thank the following projects and communities for their valuable
 
 If you use RealROS in your research or work and would like to cite it, you can use the following citation:
 
+Articles:
+```bibtex
+@article{kapukotuwa_uniros_2025,
+  title = {UniROS: A Unified Framework for ROS-Based Reinforcement Learning Across Simulated and Real-World Robotics},
+  author = {Kapukotuwa, Jayasekara and Lee, Brian and Devine, Declan and Qiao, Yuansong},
+  journal = {Sensors},
+  volume = {25},
+  number = {18},
+  pages = {5679},
+  year = {2025},
+  publisher = {MDPI},
+  doi = {10.3390/s25185679},
+  url = {https://www.mdpi.com/1424-8220/25/18/5679}
+}
+```
+
 Repository
 ```bibtex
 @misc{realros,
