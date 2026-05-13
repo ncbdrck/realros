@@ -368,47 +368,43 @@ def clean_ros_logs() -> bool:
 
 def source_workspace(abs_path) -> bool:
     """
-    Function to source the ros workspace.
+    DEPRECATED no-op.
+
+    This function used to call ``os.system("source devel/setup.bash")``
+    against the workspace path. That cannot work for two reasons:
+
+    1. ``os.system`` runs the command in ``/bin/sh`` (commonly ``dash``
+       on Ubuntu), where ``source`` is not a builtin — only ``.``
+       ("dot-source") is. So the source call fails immediately with
+       "sh: 1: source: not found".
+    2. Even if it succeeded, sourcing in a child shell only mutates
+       the child's environment. The child dies with the subprocess
+       and the calling Python process is unaffected.
+
+    To use a ROS workspace from a Python process, source it in the
+    shell that launches Python (i.e. ``source devel/setup.bash`` in
+    the terminal, then run ``python``).
+
+    This function is preserved for backwards compatibility but is now
+    a no-op that emits a DeprecationWarning and a rospy logwarn. It
+    will be removed in a future release.
 
     Args:
-        abs_path (str): Absolute path of the ros workspace.
+        abs_path (str): Unused. Kept for signature compatibility.
 
     Returns:
-        bool: True if all the ros logs were closed and False otherwise.
+        bool: Always False.
     """
-
-    if os.path.exists(abs_path) is False:
-        rospy.logwarn("A ROS workspace does not exists in the: " + abs_path + "\n" +
-                      "This should be the *absolute* path of the workspace!")
-        return False
-
-    elif os.path.exists(abs_path + "/devel/") is False:
-        rospy.logwarn("devel folder does not exists in the: " + abs_path)
-        return False
-
-    term_cmd = "cd " + abs_path + ";"
-    term_cmd = term_cmd + "source devel/setup.bash"
-    # subprocess.Popen("xterm -e ' " + term_cmd + "'", shell=True).wait()
-
-    result = os.system(term_cmd)
-
-    if result != 0:
-        rospy.logwarn("Failed to source ROS workspace")
-        return False
-
-    term_cmd = "rospack profile"
-    # subprocess.Popen("xterm -e ' " + term_cmd + "'", shell=True).wait()
-    # rospy.loginfo("successfully sourced the ROS workspace!")
-    # return True
-
-    result = os.system(term_cmd)
-
-    if result == 0:
-        rospy.loginfo("Successfully sourced the ROS workspace!")
-        return True
-    else:
-        rospy.logwarn("Failed to run rospack profile")
-        return False
+    import warnings
+    msg = (
+        "source_workspace() cannot mutate the calling Python process's "
+        "environment. Source the ROS workspace in the shell that "
+        "launches Python instead. This function is a no-op and will "
+        "be removed in a future release."
+    )
+    warnings.warn(msg, DeprecationWarning, stacklevel=2)
+    rospy.logwarn(msg)
+    return False
 
 
 def ros_launch_launcher(pkg_name=None, launch_file_name=None, launch_file_abs_path=None, args=None,
