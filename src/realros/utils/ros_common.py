@@ -7,8 +7,8 @@ It has the following functions,
     02. get_all_the_ros_masters: Get all the current ros master ports
     03. add_to_rosmaster_list: Add a port to the current ros master ports list
     04. remove_from_rosmaster_list: remove a port from the current ros master ports list
-    05. kill_all_ros_processes: Kill all the ros related instances.
-    06. kill_all_roslaunch_process: Kill all roslaunch processes.
+    05. kill_all_host_ros_processes: Kill ALL ROS processes on this host.
+    06. kill_all_host_roslaunch_processes: Kill ALL roslaunch processes on this host.
     07. kill_all_ros_nodes: Kill all running ROS nodes of a specified or the current ROS master.
     08. kill_ros_node: Kill a single ROS node of a given or current ROS master.
     09. ros_kill_master: Kill a ROS master
@@ -244,20 +244,26 @@ def remove_from_rosmaster_list(ros_port: str) -> bool:
     return True
 
 
-def kill_all_ros_processes() -> bool:
+def kill_all_host_ros_processes() -> bool:
     """
-    Function to kill all the ros-related processes, including moveit processes.
-    Note: This process kills all Rosmasters instances
+    Kill EVERY rosmaster/roslaunch/rosout/robot_state_publisher/nodelet
+    process on this host (not just the ones this script spawned).
+
+    Implemented via ``killall -9`` so it is host-scoped: if another
+    user or another script on the same machine is running ROS, this
+    will kill their processes too. Use with care.
+
+    Renamed from ``kill_all_ros_processes`` to make the host-wide scope
+    explicit. The old name is kept as a DeprecationWarning-emitting
+    alias for backwards compatibility.
 
     Returns:
-        bool: True if all the applications were closed.
+        bool: True if the kill command ran (does not verify each
+              process actually died).
     """
 
     term_cmd = "killall -9 rosmaster roslaunch rosout robot_state_publisher nodelet"
     subprocess.Popen("xterm -e ' " + term_cmd + "'", shell=True).wait()
-
-    # term_cmd = "pkill -f ros"
-    # subprocess.Popen("xterm -e ' " + term_cmd + "'", shell=True).wait()
 
     # clear the diagnostic port log
     try:
@@ -274,25 +280,59 @@ def kill_all_ros_processes() -> bool:
     except OSError:
         pass
 
-    rospy.logdebug("Successfully killed all the active ROS related instances!")
+    rospy.logdebug("Killed all host-wide ROS processes.")
+
+    return True
+
+
+def kill_all_ros_processes() -> bool:
+    """
+    DEPRECATED. Use :func:`kill_all_host_ros_processes` instead.
+
+    The old name was misleading: it sounds like it cleans up only the
+    instances this script spawned, but it actually issues ``killall -9``
+    against rosmaster/roslaunch/rosout/etc. host-wide.
+    """
+    warnings.warn(
+        "kill_all_ros_processes() is deprecated; use "
+        "kill_all_host_ros_processes() instead. The behaviour is "
+        "unchanged but the name now makes the host-wide scope explicit.",
+        DeprecationWarning, stacklevel=2,
+    )
+    return kill_all_host_ros_processes()
+
+
+def kill_all_host_roslaunch_processes() -> bool:
+    """
+    Kill EVERY ``roslaunch`` process on this host via ``killall -9``.
+
+    Host-scoped: not limited to this script's rosmaster. Renamed from
+    ``kill_all_roslaunch_process`` to make the host-wide scope
+    explicit. The old name is kept as a DeprecationWarning-emitting
+    alias for backwards compatibility.
+
+    Returns:
+        bool: True if the kill command ran.
+    """
+
+    term_cmd = "killall -9 roslaunch"
+    subprocess.Popen("xterm -e ' " + term_cmd + "'", shell=True).wait()
+    rospy.logdebug("Killed all host-wide roslaunch processes.")
 
     return True
 
 
 def kill_all_roslaunch_process() -> bool:
     """
-    Function to kill all roslaunch processes.
-    Note: Kills all the launchers not on one rosmaster
-
-    Returns:
-        bool: True if all the roslaunch processes were killed.
+    DEPRECATED. Use :func:`kill_all_host_roslaunch_processes` instead.
     """
-
-    term_cmd = "killall -9 roslaunch"
-    subprocess.Popen("xterm -e ' " + term_cmd + "'", shell=True).wait()
-    rospy.logdebug("Successfully killed all the active roslaunch instances!")
-
-    return True
+    warnings.warn(
+        "kill_all_roslaunch_process() is deprecated; use "
+        "kill_all_host_roslaunch_processes() instead. The behaviour is "
+        "unchanged but the name now makes the host-wide scope explicit.",
+        DeprecationWarning, stacklevel=2,
+    )
+    return kill_all_host_roslaunch_processes()
 
 
 def kill_all_ros_nodes(ros_port=None) -> bool:
