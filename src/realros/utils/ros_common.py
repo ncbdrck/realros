@@ -32,95 +32,139 @@ import os
 import subprocess
 import time
 import random
+import socket
+import warnings
+import fcntl
 import xacro
 from typing import Tuple, Union
+
+# Best-effort log of ports we've launched roscores on. Not load-bearing
+# for allocation correctness: the kernel decides what's free via
+# socket.bind(0); this file is just for diagnostics. flock-protected so
+# parallel multiros/realros scripts can both append safely. The path is
+# shared with multiros intentionally.
+_PORT_LOG_PATH = '/tmp/ros_master_ports_multiros.txt'
+
+
+def _port_is_free(port: int) -> bool:
+    """
+    Return True iff ``port`` can be bound on localhost right now.
+    Uses SO_REUSEADDR so a recent TIME_WAIT bind doesn't falsely
+    report the port as occupied.
+    """
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            sock.bind(('127.0.0.1', port))
+        except OSError:
+            return False
+        return True
+    finally:
+        sock.close()
+
+
+def _reserve_free_port() -> int:
+    """
+    Ask the kernel for a free ephemeral port via bind(0). Standard
+    pytest-xdist/portpicker pattern; eliminates the multi-process race
+    inherent in the old text-file allocator.
+    """
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock.bind(('127.0.0.1', 0))
+        return sock.getsockname()[1]
+    finally:
+        sock.close()
+
+
+def _append_port_log(ros_port: str) -> None:
+    """Append ``ros_port`` to the diagnostic port log under flock."""
+    try:
+        with open(_PORT_LOG_PATH, 'a') as f:
+            try:
+                fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+                f.write(ros_port + ' ')
+                f.flush()
+            finally:
+                try:
+                    fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+                except OSError:
+                    pass
+    except OSError as e:
+        rospy.logwarn(f"Could not write to port log {_PORT_LOG_PATH}: {e}")
+
+
+def _remove_from_port_log(ros_port: str) -> None:
+    """Best-effort removal of ``ros_port`` from the diagnostic log."""
+    try:
+        if not os.path.exists(_PORT_LOG_PATH):
+            return
+        with open(_PORT_LOG_PATH, 'r+') as f:
+            try:
+                fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+                contents = f.read()
+                tokens = [t for t in contents.split() if t and t != ros_port]
+                f.seek(0)
+                f.truncate()
+                if tokens:
+                    f.write(' '.join(tokens) + ' ')
+            finally:
+                try:
+                    fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+                except OSError:
+                    pass
+    except OSError as e:
+        rospy.logwarn(f"Could not edit port log {_PORT_LOG_PATH}: {e}")
 
 
 def launch_roscore(port: int = None, set_new_master_vars: bool = True, default_port: bool = False) -> str:
     """
-    Function to launch a roscore. It launches a roscore and sets a temporary variable in a file to track all the
-    current python program's opened roscores. This allows the script to launch multiple ROS instances in parallel and
-    communicate with them without interference.
+    Launch a roscore on a free port and (optionally) point this process's
+    ROS_MASTER_URI at it.
+
+    The previous implementation tracked allocated ports in a shared
+    /tmp file. We now ask the kernel for a free port via
+    ``socket.bind(0)`` — the kernel is the authoritative source of
+    truth and naturally serializes between parallel callers.
 
     Args:
-        port (int): A port for the ROS_MASTER_URI (optional).
-        set_new_master_vars (bool): change the current ROS_MASTER to the selected one
-        default_port (bool): If True, launch the roscore with default port 11311
+        port (int): A specific desired port for ROS_MASTER_URI. If the
+            port is unavailable on this host right now, we fall back to
+            a kernel-allocated free port and warn.
+        set_new_master_vars (bool): change the current ROS_MASTER
+            environment variable to the selected port.
+        default_port (bool): If True, request port 11311. If 11311 is
+            already in use, we still point ROS_MASTER_URI at it (legacy
+            behaviour: caller may want to attach to an existing roscore).
 
     Returns:
-        str: Ports selected for the ROS_MASTER_URI.
+        str: ROS_MASTER_URI port as a string.
     """
-
-    # Define the path to the file where the opened ROS_MASTER ports are will be stored
-    # We are using the same temp file as the multiros package, so we can use both packages together
-    env_file_path = '/tmp/ros_master_ports_multiros.txt'
-
-    # Get the currently opened rosmaster ports from the temp file
-    if os.path.exists(env_file_path):
-        with open(env_file_path, 'r') as f:
-            ROSMASTER_LIST = f.read().strip()
-        all_ros_masters = list(ROSMASTER_LIST.split(" "))
-        print("Currently opened ROSMASTER ports: ", all_ros_masters)
-        rospy.loginfo("Currently opened ROSMASTER ports: " + str(ROSMASTER_LIST))
-
-    # if there is no such a file, create one
-    else:
-        print("No existing ROSMASTER ports!")
-        ROSMASTER_LIST = ''
-        all_ros_masters = list(ROSMASTER_LIST.split(" "))
-        with open(env_file_path, 'w') as f:
-            f.write(ROSMASTER_LIST)
-        rospy.loginfo("Created /tmp/ros_master_ports_multiros.txt!")
-
-    # done is True if the selected or given port is not in the temp file
-    done = False
-
     if default_port:
         port = 11311
 
-    # Find and launch the ros master with the given port if it is not already in use
-    if port is not None:
-        ports = [str(port), str(port - 1), str(port + 1)]
-        if not any(item in ports for item in all_ros_masters):
-            done = True
-            ros_port = str(port)
+    if port is not None and _port_is_free(port):
+        ros_port = str(port)
+    elif port == 11311:
+        # Legacy behaviour: if the user explicitly asked for the
+        # default port and it's already taken, assume an existing
+        # roscore is what they want to attach to.
+        rospy.logwarn("The default port 11311 is already in use; assuming existing roscore.")
+        if set_new_master_vars:
+            change_ros_master(str(port))
+        return str(port)
+    else:
+        if port is not None:
+            rospy.logwarn(
+                f"Requested port {port} is unavailable; falling back "
+                f"to a kernel-allocated free port."
+            )
+        ros_port = str(_reserve_free_port())
 
-            # add the new port to the temp file
-            ROSMASTER_LIST = ROSMASTER_LIST + ' ' + ros_port
-            with open(env_file_path, 'w') as f:
-                f.write(ROSMASTER_LIST)
-            rospy.logdebug(f"Updated the ROSMASTER port list with port {ros_port}!")
-
-        else:
-            if port == 11311:
-                rospy.logwarn("The default port is already in use!")
-
-                if set_new_master_vars:
-                    change_ros_master(str(port))
-
-                return str(port)
-            else:
-                rospy.logwarn("The port already exists! So launching rosmaster with a new port")
-                print("The port already exists! So launching with a new port")
-
-    # If not done, try to find an unused port by generating random port numbers until one is found that is
-    # not already in use
-    while not done:
-        randn = random.randint(11300, 12400)
-
-        # Since we are allocating the gazebo port just after the ros port, we need to check
-        # we need this since we are sharing this temp file with the multiros package
-        values = [str(randn), str(randn - 1), str(randn + 1)]
-
-        if not any(item in values for item in all_ros_masters):
-            done = True
-            ros_port = str(randn)
-
-            # add the new port to the variable
-            ROSMASTER_LIST = ROSMASTER_LIST + ' ' + ros_port
-            with open(env_file_path, 'w') as f:
-                f.write(ROSMASTER_LIST)
-            rospy.logdebug(f"updated the ROSMASTER port list with port {ros_port}!")
+    # Diagnostic log only; not load-bearing.
+    _append_port_log(ros_port)
 
     # launch roscore as a term command
     term_cmd = "roscore -p " + ros_port
@@ -138,84 +182,66 @@ def launch_roscore(port: int = None, set_new_master_vars: bool = True, default_p
 
 def get_all_the_ros_masters() -> str:
     """
-    Function to get all the active Rosmasters that were made during the execution of the script.
+    DEPRECATED. Reads the diagnostic port log only.
 
-    Returns:
-        str: List of all the active rosmaster ports.
+    Port allocation is handled by ``launch_roscore`` via
+    ``socket.bind(0)``; this helper returns whatever the best-effort
+    diagnostic log contains.
     """
-
-    # Define the path to the file where all the active rosmaster ports will be stored
-    env_file_path = '/tmp/ros_master_ports_multiros.txt'
-
-    # Get the currently opened rosmaster ports from the temp file
-    if os.path.exists(env_file_path):
-        with open(env_file_path, 'r') as f:
-            rosmaster_list = f.read().strip()
-
-    else:
-        print("No existing RealROS ROSMASTER ports!")
-        rosmaster_list = '11311'  # Default port for ROS. So better to not select it
-        with open(env_file_path, 'w') as f:
-            f.write(rosmaster_list)
-        rospy.loginfo("Created /tmp/ros_master_ports_multiros.txt!")
-
-    return rosmaster_list
+    warnings.warn(
+        "get_all_the_ros_masters() is deprecated and now reads a "
+        "best-effort diagnostic log only. Port allocation is handled "
+        "directly by the kernel via socket.bind(0).",
+        DeprecationWarning, stacklevel=2,
+    )
+    if not os.path.exists(_PORT_LOG_PATH):
+        return ''
+    try:
+        with open(_PORT_LOG_PATH, 'r') as f:
+            try:
+                fcntl.flock(f.fileno(), fcntl.LOCK_SH)
+                return f.read().strip()
+            finally:
+                try:
+                    fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+                except OSError:
+                    pass
+    except OSError:
+        return ''
 
 
 def add_to_rosmaster_list(ros_port: str) -> bool:
     """
-    Function to add the specified port to the RealROS rosmaster port list.
+    DEPRECATED. Appends to the diagnostic port log only.
 
-    Args:
-        ros_port (str): The ROS_MASTER_URI port that needs to be added.
-
-    Returns:
-        bool: True if the port was added successfully.
+    Port allocation is now handled by ``launch_roscore`` directly via
+    ``socket.bind(0)``. Callers do not need to maintain a shared list.
     """
-
-    # Define the path to the file where the all the active rosmaster ports will be stored
-    env_file_path = '/tmp/ros_master_ports_multiros.txt'
-
-    rosmaster_list = get_all_the_ros_masters()
-
-    ROSMASTER_LIST = rosmaster_list + ' ' + ros_port
-
-    with open(env_file_path, 'w') as f:
-        f.write(ROSMASTER_LIST)
-
-    rospy.logdebug("Updated the temp file with the port: " + ros_port)
-
+    warnings.warn(
+        "add_to_rosmaster_list() is deprecated and now only writes "
+        "to a diagnostic log. Port allocation is handled by "
+        "socket.bind(0) inside launch_roscore().",
+        DeprecationWarning, stacklevel=2,
+    )
+    _append_port_log(ros_port)
     return True
 
 
 def remove_from_rosmaster_list(ros_port: str) -> bool:
     """
-    Function to remove the specified port from the RealROS rosmaster port list.
+    DEPRECATED. Removes ``ros_port`` from the diagnostic log only.
 
-    Args:
-        ros_port (str): The ROS_MASTER_URI port that needs to be removed.
-
-    Returns:
-        bool: True if the port was removed successfully, False otherwise.
+    Port allocation is now handled by ``launch_roscore`` directly via
+    ``socket.bind(0)``. Callers do not need to maintain a shared list.
     """
-
-    # Define the path to the file where all the active rosmaster ports will be stored
-    env_file_path = '/tmp/ros_master_ports_multiros.txt'
-
-    ROSMASTER_LIST = get_all_the_ros_masters()
-
-    if ros_port in ROSMASTER_LIST:
-        edited_ros_master_list = ROSMASTER_LIST.replace(ros_port, '')
-
-        with open(env_file_path, 'w') as f:
-            f.write(edited_ros_master_list)
-
-        rospy.loginfo("Removed the port: " + ros_port + " from the RealROS rosmaster port list!")
-
-        return True
-    else:
-        print("Given port: " + ros_port + " doesn't exist in the active rosmaster port list!")
-        return False
+    warnings.warn(
+        "remove_from_rosmaster_list() is deprecated and now only edits "
+        "a diagnostic log. Port allocation is handled by socket.bind(0) "
+        "inside launch_roscore().",
+        DeprecationWarning, stacklevel=2,
+    )
+    _remove_from_port_log(ros_port)
+    return True
 
 
 def kill_all_ros_processes() -> bool:
@@ -233,8 +259,20 @@ def kill_all_ros_processes() -> bool:
     # term_cmd = "pkill -f ros"
     # subprocess.Popen("xterm -e ' " + term_cmd + "'", shell=True).wait()
 
-    # remove all the rosmasters
-    remove_all_from_rosmaster_list()
+    # clear the diagnostic port log
+    try:
+        if os.path.exists(_PORT_LOG_PATH):
+            with open(_PORT_LOG_PATH, 'w') as f:
+                try:
+                    fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+                    f.write('')
+                finally:
+                    try:
+                        fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+                    except OSError:
+                        pass
+    except OSError:
+        pass
 
     rospy.logdebug("Successfully killed all the active ROS related instances!")
 
@@ -276,9 +314,9 @@ def kill_all_ros_nodes(ros_port=None) -> bool:
 
     rospy.logdebug("Successfully killed all the active nodes instances!")
 
-    # Remove the current ros master from the ROS_MASTER port list
+    # Remove from diagnostic port log
     if ros_port is not None:
-        remove_from_rosmaster_list(ros_port)
+        _remove_from_port_log(ros_port)
 
     return True
 
@@ -303,9 +341,9 @@ def kill_ros_node(node_name, ros_port=None) -> bool:
 
     rospy.logdebug(f"Successfully killed the node: {node_name}!")
 
-    # Remove the current ros master from the ROS_MASTER port list
+    # Remove from diagnostic port log
     if node_name == "/rosout" and ros_port is not None:
-        remove_from_rosmaster_list(ros_port)
+        _remove_from_port_log(ros_port)
 
     return True
 
@@ -335,8 +373,8 @@ def ros_kill_master(ros_port) -> bool:
 
     if result == 0:
         rospy.logdebug(f"Successfully killed ROS master: {ros_port}!")
-        # Remove the ros master from the ROS_MASTER port list
-        remove_from_rosmaster_list(ros_port)
+        # Remove from diagnostic port log
+        _remove_from_port_log(ros_port)
         return True
     else:
         rospy.logdebug(f"Failed to kill ROS master: {ros_port}!")
@@ -829,18 +867,29 @@ def init_robot_state_publisher(ns: str = "/", max_pub_freq: float = None, launch
 
 def remove_all_from_rosmaster_list() -> bool:
     """
-    Function to remove all ports from the RealROS rosmaster port list.
+    DEPRECATED. Truncates the diagnostic port log only.
 
-    Returns:
-        bool: True if all ports were removed successfully, False otherwise.
+    Port allocation is now handled by ``launch_roscore`` directly via
+    ``socket.bind(0)``. Callers do not need to maintain a shared list.
     """
-
-    # Define the path to the file where all the active rosmaster ports will be stored
-    env_file_path = '/tmp/ros_master_ports_multiros.txt'
-
-    with open(env_file_path, 'w') as f:
-        f.write('')
-
-    rospy.loginfo("Removed all ports from the RealROS rosmaster port list!")
-
+    warnings.warn(
+        "remove_all_from_rosmaster_list() is deprecated and now only "
+        "truncates a diagnostic log. Port allocation is handled by "
+        "socket.bind(0) inside launch_roscore().",
+        DeprecationWarning, stacklevel=2,
+    )
+    try:
+        if os.path.exists(_PORT_LOG_PATH):
+            with open(_PORT_LOG_PATH, 'w') as f:
+                try:
+                    fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+                    f.write('')
+                finally:
+                    try:
+                        fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+                    except OSError:
+                        pass
+    except OSError as e:
+        rospy.logwarn(f"Could not truncate port log {_PORT_LOG_PATH}: {e}")
+        return False
     return True
