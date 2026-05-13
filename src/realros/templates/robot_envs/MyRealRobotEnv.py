@@ -1,7 +1,6 @@
 #!/bin/python3
 
 import rospy
-import rostopic
 from gymnasium import spaces
 from gymnasium.envs.registration import register
 from typing import Optional, List, Any, Dict
