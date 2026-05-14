@@ -88,6 +88,18 @@ def register_managed_process(popen, **selectors) -> None:
         except ValueError:
             _prev_sigint_handler = None
 
+        # Also register with rospy's shutdown machinery. ``rospy.init_node``
+        # (typically called by the user's script AFTER launch_roscore)
+        # installs its OWN SIGINT handler that overwrites ours — so our
+        # SIGINT handler would never fire on Ctrl+C. rospy's shutdown
+        # callback list is iterated regardless of who owns the signal
+        # handler, so this is what actually triggers cleanup in the
+        # ``import realros; rospy.init_node; train`` flow.
+        try:
+            rospy.on_shutdown(_cleanup_managed_processes)
+        except Exception:
+            pass
+
 
 def _sigint_handler(signum, frame):
     """
@@ -161,6 +173,16 @@ def _cleanup_managed_processes() -> None:
                 popen.kill()
         except Exception:
             pass
+
+    # Restore SIGINT to the default handler. Useful when this cleanup
+    # runs via rospy.on_shutdown: rospy may have installed its own
+    # SIGINT handler that doesn't terminate the script, so the user
+    # has to Ctrl+C multiple times. Resetting to SIG_DFL here means
+    # any further Ctrl+C kills the process immediately.
+    try:
+        signal.signal(signal.SIGINT, signal.SIG_DFL)
+    except (ValueError, OSError):
+        pass
 
 
 def _port_is_free(port: int) -> bool:
