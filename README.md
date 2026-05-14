@@ -153,6 +153,15 @@ It also showcases:
 
 The installation instructions for the examples are provided in the respective repositories.
 
+## Documentation
+
+Full ecosystem documentation — covering installation, ready-made
+environments, environment creation (sim and real), training with
+any gymnasium-compatible RL library, and joint sim+real training —
+lives in the [UniROS repository](https://github.com/ncbdrck/UniROS)
+under `docs/`. RealROS is documented there alongside MultiROS and
+the rest of the framework.
+
 ## License
 
 RealROS is released under the [MIT License](https://opensource.org/licenses/MIT). Please see the LICENSE file for more details.
