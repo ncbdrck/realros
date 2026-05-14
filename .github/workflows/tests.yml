@@ -45,7 +45,8 @@ jobs:
           # the OUTER env, then pass --no-build-isolation to pip install so the
           # build subprocess can see them.
           pip install setuptools wheel catkin_pkg pytest
-          pip install gymnasium gymnasium_robotics numpy
+          # Pin gymnasium to match the supported runtime.
+          pip install "gymnasium==0.29.1" "gymnasium_robotics==1.2.4" numpy
           pip install -e UniROS/uniros --no-build-isolation
           pip install -e realros --no-build-isolation
 
