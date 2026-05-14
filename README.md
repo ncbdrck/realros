@@ -1,6 +1,9 @@
 # RealROS: A Comprehensive Framework for Real-World Robotic Reinforcement Learning
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Documentation Status](https://readthedocs.org/projects/uniros/badge/?version=latest)](https://uniros.readthedocs.io/en/latest/?badge=latest)
+
+📚 **Full documentation**: [uniros.readthedocs.io](https://uniros.readthedocs.io/) (ecosystem-wide docs hosted via UniROS)
 
 RealROS, is a unified ([ROS](http://wiki.ros.org/))-based open-source Python framework to create real-world robotics environments for reinforcement learning (RL) applications.
 
