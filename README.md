@@ -183,7 +183,7 @@ If you use RealROS in your research or work and would like to cite it, you can u
 Articles:
 ```bibtex
 @article{kapukotuwa_uniros_2025,
-  title = {UniROS: A Unified Framework for ROS-Based Reinforcement Learning Across Simulated and Real-World Robotics},
+  title = {UniROS: ROS-Based Reinforcement Learning Across Simulated and Real-World Robotics},
   author = {Kapukotuwa, Jayasekara and Lee, Brian and Devine, Declan and Qiao, Yuansong},
   journal = {Sensors},
   volume = {25},
