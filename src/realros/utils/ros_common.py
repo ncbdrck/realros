@@ -204,19 +204,39 @@ def _port_is_free(port: int) -> bool:
         sock.close()
 
 
-def _reserve_free_port() -> int:
+# Track ports we've issued via _reserve_free_port within this Python
+# process. The kernel only guarantees port uniqueness while a socket is
+# bound — once we close() to read the port back, the kernel can re-issue
+# the same port to a subsequent bind(0). Keeping a per-process set lets
+# us detect that and pick a different port.
+_port_claims_lock = threading.Lock()
+_port_claims: set = set()
+
+
+def _reserve_free_port(_max_retries: int = 20) -> int:
     """
-    Ask the kernel for a free ephemeral port via bind(0). Standard
-    pytest-xdist/portpicker pattern; eliminates the multi-process race
-    inherent in the old text-file allocator.
+    Ask the kernel for a free ephemeral port via bind(0).
+
+    Uses a process-local set to avoid re-issuing the same port even
+    if the kernel returns it again after the previous claimant's
+    socket was closed.
     """
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    try:
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.bind(('127.0.0.1', 0))
-        return sock.getsockname()[1]
-    finally:
-        sock.close()
+    for _ in range(_max_retries):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            sock.bind(('127.0.0.1', 0))
+            port = sock.getsockname()[1]
+        finally:
+            sock.close()
+        with _port_claims_lock:
+            if port not in _port_claims:
+                _port_claims.add(port)
+                return port
+    raise RuntimeError(
+        f"Could not reserve a unique free port after {_max_retries} attempts; "
+        f"this typically means something is wrong with the ephemeral port pool."
+    )
 
 
 def _append_port_log(ros_port: str) -> None:
