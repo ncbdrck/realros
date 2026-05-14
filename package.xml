@@ -27,7 +27,7 @@
   <exec_depend>rospy</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>std_msgs</exec_depend>
-  <!-- Round 8.1: realros.core re-exports uniros._proxy.GymProxy -->
+  <!-- realros.core.RealrosGym is an alias for uniros._proxy.GymProxy. -->
   <exec_depend>uniros</exec_depend>
 
 

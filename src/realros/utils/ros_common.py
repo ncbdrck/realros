@@ -261,25 +261,23 @@ def _remove_from_port_log(ros_port: str) -> None:
 def launch_roscore(port: int = None, set_new_master_vars: bool = True, default_port: bool = False) -> str:
     """
     Launch a roscore on a free port and (optionally) point this process's
-    ROS_MASTER_URI at it.
+    ``ROS_MASTER_URI`` at it.
 
-    The previous implementation tracked allocated ports in a shared
-    /tmp file. We now ask the kernel for a free port via
-    ``socket.bind(0)`` — the kernel is the authoritative source of
-    truth and naturally serializes between parallel callers.
+    Ports are allocated via ``socket.bind(('127.0.0.1', 0))`` so the
+    kernel picks free ports and serializes between parallel callers.
 
     Args:
-        port (int): A specific desired port for ROS_MASTER_URI. If the
-            port is unavailable on this host right now, we fall back to
-            a kernel-allocated free port and warn.
-        set_new_master_vars (bool): change the current ROS_MASTER
-            environment variable to the selected port.
+        port (int): A specific desired port for ``ROS_MASTER_URI``.
+            If the port is unavailable on this host right now, falls
+            back to a kernel-allocated free port and logs a warning.
+        set_new_master_vars (bool): change the current
+            ``ROS_MASTER_URI`` environment variable to the selected port.
         default_port (bool): If True, request port 11311. If 11311 is
-            already in use, we still point ROS_MASTER_URI at it (legacy
-            behaviour: caller may want to attach to an existing roscore).
+            already in use, ``ROS_MASTER_URI`` is still pointed at it
+            so the caller can attach to an existing roscore.
 
     Returns:
-        str: ROS_MASTER_URI port as a string.
+        str: ``ROS_MASTER_URI`` port as a string.
     """
     if default_port:
         port = 11311
