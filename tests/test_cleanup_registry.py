@@ -1,8 +1,8 @@
 """
-Round 7-fu + 7-fu-2 regression for realros: managed-process registry
-tears down the roscore THIS script spawned on Ctrl+C or interpreter
-exit. realros has no Gazebo, so the gazebo_pids selector is unused
-but the rest of the registry behaves identically to multiros.
+Regression: the managed-process registry tears down the roscore
+THIS script spawned on Ctrl+C or interpreter exit. realros has no
+Gazebo, so the gazebo_pids selector is unused, but the rest of the
+registry behaves identically to multiros.
 """
 import signal
 import subprocess

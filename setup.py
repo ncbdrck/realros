@@ -4,8 +4,19 @@ from catkin_pkg.python_setup import generate_distutils_setup
 # fetch values from package.xml
 setup_args = generate_distutils_setup(
     name="realros",
-    packages=['realros'],
+    packages=[
+        'realros',
+        'realros.envs',
+        'realros.utils',
+        'realros.wrappers',
+        'realros.templates',
+        'realros.templates.robot_envs',
+        'realros.templates.task_envs',
+    ],
     package_dir={'': 'src'},
+    # PEP 561: ship the py.typed marker so type checkers (mypy /
+    # pyright) treat installed copies of the package as typed.
+    package_data={'realros': ['py.typed']},
 
     description="A Comprehensive Framework for Real-World Robotic Reinforcement Learning",
     url="https://github.com/ncbdrck/realros/",

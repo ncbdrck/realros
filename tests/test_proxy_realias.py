@@ -1,7 +1,7 @@
 """
-Round 8.1 regression: realros.core.RealrosGym must be the same class
-object as uniros._proxy.GymProxy, so a fix landed in UniROS also
-lands in realros.
+Regression: realros.core.RealrosGym must be the same class object
+as uniros._proxy.GymProxy, so any fix landed in UniROS also lands
+in realros.
 """
 from realros.core import RealrosGym
 from uniros._proxy import GymProxy

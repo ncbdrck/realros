@@ -27,8 +27,12 @@ class MyRealTaskGoalEnv(MyRealRobotGoalEnv.MyRealRobotGoalEnv):
     Use this custom env to implement a task using the robot/sensors related functions defined in the MyRobotGoalEnv
     """
 
-    def __init__(self, new_roscore: bool = True, roscore_port: str = None, seed: int = None,
-                 reset_env_prompt: bool = False, action_cycle_time: float = 0.0, default_port=False):
+    def __init__(self, new_roscore: bool = True,
+                 roscore_port: Optional[str] = None,
+                 seed: Optional[int] = None,
+                 reset_env_prompt: bool = False,
+                 action_cycle_time: float = 0.0,
+                 default_port: bool = False) -> None:
         """
 
         In the initialization statement, you can initialize any desired number and type of variables and pass the
@@ -158,7 +162,7 @@ class MyRealTaskGoalEnv(MyRealRobotGoalEnv.MyRealRobotGoalEnv):
     # -------------------------------------------------------
     #   Methods for interacting with the environment
 
-    def _set_init_params(self, options: Optional[Dict[str, Any]] = None):
+    def _set_init_params(self, options: Optional[Dict[str, Any]] = None) -> None:
         """
         Set initial parameters for the environment.
 
@@ -172,7 +176,7 @@ class MyRealTaskGoalEnv(MyRealRobotGoalEnv.MyRealRobotGoalEnv):
         """
         raise NotImplementedError()
 
-    def _set_action(self, action):
+    def _set_action(self, action: Any) -> None:
         """
         Function to apply an action to the robot.
 
@@ -184,7 +188,7 @@ class MyRealTaskGoalEnv(MyRealRobotGoalEnv.MyRealRobotGoalEnv):
         """
         raise NotImplementedError()
 
-    def _get_observation(self):
+    def _get_observation(self) -> Any:
         """
         Function to get an observation from the environment.
 
@@ -197,7 +201,7 @@ class MyRealTaskGoalEnv(MyRealRobotGoalEnv.MyRealRobotGoalEnv):
         """
         raise NotImplementedError()
 
-    def _get_achieved_goal(self):
+    def _get_achieved_goal(self) -> Any:
         """
         Get the achieved goal from the environment.
 
@@ -206,7 +210,7 @@ class MyRealTaskGoalEnv(MyRealRobotGoalEnv.MyRealRobotGoalEnv):
         """
         raise NotImplementedError()
 
-    def _get_desired_goal(self):
+    def _get_desired_goal(self) -> Any:
         """
         Get the desired goal from the environment.
 
@@ -215,7 +219,8 @@ class MyRealTaskGoalEnv(MyRealRobotGoalEnv.MyRealRobotGoalEnv):
         """
         raise NotImplementedError()
 
-    def compute_reward(self, achieved_goal, desired_goal, info) -> float:
+    def compute_reward(self, achieved_goal: Any, desired_goal: Any,
+                       info: Dict[str, Any]) -> float:
         """
         Compute the reward for achieving a given goal.
 
@@ -234,7 +239,8 @@ class MyRealTaskGoalEnv(MyRealRobotGoalEnv.MyRealRobotGoalEnv):
 
         raise NotImplementedError()
 
-    def compute_terminated(self, achieved_goal, desired_goal, info):
+    def compute_terminated(self, achieved_goal: Any, desired_goal: Any,
+                           info: Dict[str, Any]) -> bool:
         """
         Function to check if the episode is terminated due to reaching a terminal state.
 
@@ -252,7 +258,8 @@ class MyRealTaskGoalEnv(MyRealRobotGoalEnv.MyRealRobotGoalEnv):
         """
         raise NotImplementedError()
 
-    def compute_truncated(self, achieved_goal, desired_goal, info):
+    def compute_truncated(self, achieved_goal: Any, desired_goal: Any,
+                          info: Dict[str, Any]) -> bool:
         """
         Function to check if the episode is truncated due non-terminal reasons.
 
@@ -275,7 +282,7 @@ class MyRealTaskGoalEnv(MyRealRobotGoalEnv.MyRealRobotGoalEnv):
     # -------------------------------------------------------
     #   Include any custom methods available for the MyTaskEnv class
 
-    def _get_params(self):
+    def _get_params(self) -> None:
         """
         Function to get configuration parameters (optional)
         """
@@ -285,7 +292,9 @@ class MyRealTaskGoalEnv(MyRealRobotGoalEnv.MyRealRobotGoalEnv):
     #   Task Methods for launching roscore
 
     @staticmethod
-    def _launch_roscore(port=None, set_new_master_vars=False, default_port=False):
+    def _launch_roscore(port: Optional[int] = None,
+                        set_new_master_vars: bool = False,
+                        default_port: bool = False) -> str:
         """
         Launches a new roscore with the specified port. Only updates the ros_port.
 

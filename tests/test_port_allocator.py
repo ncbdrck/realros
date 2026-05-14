@@ -1,8 +1,8 @@
 """
-Round 6.1 regression for realros: launch_roscore uses socket.bind(0)
-to pick a free port atomically. realros has a single-port API
-(returns just ``ros_port`` as a string) and an extra ``default_port``
-argument; otherwise the allocator is the same as multiros.
+Regression: launch_roscore uses socket.bind(0) to pick a free port
+atomically. realros has a single-port API (returns just ``ros_port``
+as a string) and an extra ``default_port`` argument; otherwise the
+allocator is the same as multiros.
 """
 import socket
 import threading

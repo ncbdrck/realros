@@ -4,7 +4,7 @@ import rospy
 import gymnasium_robotics
 from realros.utils import ros_common
 from realros.utils import ros_controllers
-from typing import List, Any, Dict, Optional
+from typing import Any, Dict, List, Mapping, Optional, Tuple
 import time
 
 
@@ -195,7 +195,7 @@ class RealGoalEnv(gymnasium_robotics.GoalEnv):
 
         rospy.loginfo(self.CYAN + "End init RealGoalEnv" + self.ENDC)
 
-    def step(self, action):
+    def step(self, action: Any) -> Tuple[Dict[str, Any], float, bool, bool, Dict[str, Any]]:
         """
         Take a step in the environment.
 
@@ -246,7 +246,9 @@ class RealGoalEnv(gymnasium_robotics.GoalEnv):
         return {'observation': self.observation, 'achieved_goal': self.achieved_goal,
                 'desired_goal': self.desired_goal}, self.reward, self.terminated, self.truncated, self.info
 
-    def reset(self, seed: Optional[int] = None, options: Optional[Dict[str, Any]] = None):
+    def reset(self, seed: Optional[int] = None,
+              options: Optional[Mapping[str, Any]] = None,
+              ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         """
         Reset the environment.
 
@@ -315,7 +317,7 @@ class RealGoalEnv(gymnasium_robotics.GoalEnv):
         return {'observation': self.observation, 'achieved_goal': self.achieved_goal,
                 'desired_goal': self.desired_goal}, self.info
 
-    def close(self):
+    def close(self) -> None:
         """
         Close the environment.
         """

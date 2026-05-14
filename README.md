@@ -118,11 +118,22 @@ Please note that the instructions assume you are using Ubuntu 20.04 and ROS Noet
 
 ## Installation
 
+> **Required dependency:** Starting with v0.2.0, RealROS shares its
+> multiprocessing proxy and ROS utility modules with the
+> [UniROS](https://github.com/ncbdrck/UniROS) package
+> (`realros.core.RealrosGym` is an alias for `uniros._proxy.GymProxy`,
+> and `realros.utils.ros_markers` re-exports from
+> `uniros.utils.ros_markers`). **You must clone UniROS into the same
+> catkin workspace.** A standalone clone of RealROS will fail at
+> import time with `ModuleNotFoundError: No module named 'uniros'`.
+
 To get started with RealROS, follow these steps:
 
-1. Clone the repository:
+1. Clone UniROS (provides the shared `uniros` runtime) and RealROS into
+   the same catkin workspace:
     ```shell
     cd ~/catkin_ws/src
+    git clone -b gymnasium https://github.com/ncbdrck/UniROS.git
     git clone -b gymnasium https://github.com/ncbdrck/realros.git
     ```
 
