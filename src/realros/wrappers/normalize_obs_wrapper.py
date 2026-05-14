@@ -1,3 +1,5 @@
+from typing import Any, Dict, Union
+
 import gymnasium as gym
 import numpy as np
 
@@ -18,7 +20,7 @@ class NormalizeObservationWrapper(gym.ObservationWrapper):
         ValueError: If the observation space of the environment is not supported.
     """
 
-    def __init__(self, env, normalize_goal_spaces=False):
+    def __init__(self, env: gym.Env, normalize_goal_spaces: bool = False) -> None:
 
         # init the ObservationWrapper
         super().__init__(env)
@@ -43,7 +45,7 @@ class NormalizeObservationWrapper(gym.ObservationWrapper):
         else:
             raise ValueError(f"Unsupported observation space: {type(env.observation_space)}")
 
-    def _normalize_box_observation(self, observation):
+    def _normalize_box_observation(self, observation: np.ndarray) -> np.ndarray:
         # Normalize a Box observation to be between -1 and 1
         if isinstance(self.env.observation_space, gym.spaces.Box):
             low = self.env.observation_space.low
@@ -59,7 +61,7 @@ class NormalizeObservationWrapper(gym.ObservationWrapper):
 
         return observation
 
-    def _normalize_achieved_goal(self, achieved_goal):
+    def _normalize_achieved_goal(self, achieved_goal: np.ndarray) -> np.ndarray:
         # Check that the achieved_goal_space is a Box space
         if not isinstance(self.env.observation_space['achieved_goal'], gym.spaces.Box):
             raise ValueError(f"Unsupported achieved_goal space: {type(self.env.observation_space['achieved_goal'])}")
@@ -72,7 +74,7 @@ class NormalizeObservationWrapper(gym.ObservationWrapper):
 
         return achieved_goal
 
-    def _normalize_desired_goal(self, desired_goal):
+    def _normalize_desired_goal(self, desired_goal: np.ndarray) -> np.ndarray:
         # Check that the desired_goal_space is a Box space
         if not isinstance(self.env.observation_space['desired_goal'], gym.spaces.Box):
             raise ValueError(f"Unsupported desired_goal space: {type(self.env.observation_space['desired_goal'])}")
@@ -85,7 +87,7 @@ class NormalizeObservationWrapper(gym.ObservationWrapper):
 
         return desired_goal
 
-    def _normalize_dict_observation(self, observation):
+    def _normalize_dict_observation(self, observation: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
         # Normalize a dictionary observation with keys for 'observation', 'achieved_goal', and 'desired_goal'
         observation['observation'] = self._normalize_box_observation(observation['observation'])
 
@@ -95,6 +97,6 @@ class NormalizeObservationWrapper(gym.ObservationWrapper):
 
         return observation
 
-    def observation(self, observation):
+    def observation(self, observation: Union[np.ndarray, Dict[str, np.ndarray]]) -> Union[np.ndarray, Dict[str, np.ndarray]]:
         # Normalize the observation using the appropriate method
         return self.normalize_observation(observation)
