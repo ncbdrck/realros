@@ -31,8 +31,11 @@ class MyRealRobotEnv(RealBaseEnv.RealBaseEnv):
     Superclass for all Robot environments.
     """
 
-    def __init__(self, ros_port: str = None, seed: int = None, reset_env_prompt: bool = False,
-                 close_env_prompt: bool = False, action_cycle_time: float = 0.0):
+    def __init__(self, ros_port: Optional[str] = None,
+                 seed: Optional[int] = None,
+                 reset_env_prompt: bool = False,
+                 close_env_prompt: bool = False,
+                 action_cycle_time: float = 0.0) -> None:
         """
         Initializes a new Robot Environment
 
@@ -205,7 +208,7 @@ class MyRealRobotEnv(RealBaseEnv.RealBaseEnv):
     # ---------------------------------------------------
     #   Methods to override in Custom Robot Environment
 
-    def _check_connection_and_readiness(self):
+    def _check_connection_and_readiness(self) -> bool:
         """
         Function to check the connection status of subscribers, publishers and services, as well as the readiness of
         all systems.
@@ -215,7 +218,7 @@ class MyRealRobotEnv(RealBaseEnv.RealBaseEnv):
     # ---------------------------------------------------
     #    Methods to override in Custom Task Environment
 
-    def _set_action(self, action):
+    def _set_action(self, action: Any) -> None:
         """
         Function to apply an action to the robot.
 
@@ -227,7 +230,7 @@ class MyRealRobotEnv(RealBaseEnv.RealBaseEnv):
         """
         raise NotImplementedError()
 
-    def _get_observation(self):
+    def _get_observation(self) -> Any:
         """
         Get an observation from the environment.
 
@@ -240,7 +243,7 @@ class MyRealRobotEnv(RealBaseEnv.RealBaseEnv):
         """
         raise NotImplementedError()
 
-    def _get_reward(self, info: Optional[Dict[str, Any]] = None):
+    def _get_reward(self, info: Optional[Dict[str, Any]] = None) -> float:
         """
         Function to get a reward from the environment.
 
@@ -256,7 +259,7 @@ class MyRealRobotEnv(RealBaseEnv.RealBaseEnv):
         """
         raise NotImplementedError()
 
-    def _compute_terminated(self, info: Optional[Dict[str, Any]] = None):
+    def _compute_terminated(self, info: Optional[Dict[str, Any]] = None) -> bool:
         """
         Function to check if the episode is terminated due to reaching a terminal state.
 
@@ -272,7 +275,7 @@ class MyRealRobotEnv(RealBaseEnv.RealBaseEnv):
         """
         raise NotImplementedError()
 
-    def _compute_truncated(self, info: Optional[Dict[str, Any]] = None):
+    def _compute_truncated(self, info: Optional[Dict[str, Any]] = None) -> bool:
         """
         Function to check if the episode is truncated due non-terminal reasons.
 
@@ -290,7 +293,7 @@ class MyRealRobotEnv(RealBaseEnv.RealBaseEnv):
         """
         raise NotImplementedError()
 
-    def _set_init_params(self, options: Optional[Dict[str, Any]] = None):
+    def _set_init_params(self, options: Optional[Dict[str, Any]] = None) -> None:
         """
         Set initial parameters for the environment.
 
