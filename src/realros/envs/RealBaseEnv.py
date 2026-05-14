@@ -5,7 +5,7 @@ import gymnasium as gym
 
 from realros.utils import ros_common
 from realros.utils import ros_controllers
-from typing import List, Any, Dict, Optional
+from typing import Any, Dict, List, Mapping, Optional, Tuple
 
 
 class RealBaseEnv(gym.Env):
@@ -194,7 +194,7 @@ class RealBaseEnv(gym.Env):
 
         rospy.loginfo(self.CYAN + "End init RealBaseEnv" + self.ENDC)
 
-    def step(self, action):
+    def step(self, action: Any) -> Tuple[Any, float, bool, bool, Dict[str, Any]]:
         """
         Take a step in the environment.
 
@@ -242,7 +242,9 @@ class RealBaseEnv(gym.Env):
 
         return self.observation, self.reward, self.terminated, self.truncated, self.info
 
-    def reset(self, seed: Optional[int] = None, options: Optional[Dict[str, Any]] = None):
+    def reset(self, seed: Optional[int] = None,
+              options: Optional[Mapping[str, Any]] = None,
+              ) -> Tuple[Any, Dict[str, Any]]:
         """
         Reset the environment.
 
@@ -308,7 +310,7 @@ class RealBaseEnv(gym.Env):
 
         return self.observation, self.info
 
-    def close(self):
+    def close(self) -> None:
         """
         Close the environment.
         """
