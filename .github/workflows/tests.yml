@@ -28,7 +28,7 @@ jobs:
 
       # realros's proxy class + shared utilities live in UniROS. Clone the
       # branch matching whatever branch this workflow is running on, so a PR
-      # or push on realros's tier2-2026 pulls UniROS's tier2-2026, etc.
+      # or push on a feature branch pulls UniROS's matching branch.
       #
       # IMPORTANT: when fast-forwarding an integration branch → gymnasium
       # across the ecosystem, merge UniROS *first* and the dependent repos
