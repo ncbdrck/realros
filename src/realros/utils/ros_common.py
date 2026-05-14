@@ -35,8 +35,11 @@ import random
 import socket
 import warnings
 import fcntl
+import atexit
+import signal
+import threading
 import xacro
-from typing import Tuple, Union
+from typing import Tuple, Union, List, Dict, Any
 
 # Best-effort log of ports we've launched roscores on. Not load-bearing
 # for allocation correctness: the kernel decides what's free via
@@ -44,6 +47,120 @@ from typing import Tuple, Union
 # parallel multiros/realros scripts can both append safely. The path is
 # shared with multiros intentionally.
 _PORT_LOG_PATH = '/tmp/ros_master_ports_multiros.txt'
+
+# ----------------------------------------------------------------------
+# Managed-process registry: track roscore processes this Python process
+# spawned so we can clean them up on Ctrl+C or normal exit. Scoped to
+# processes WE launched — pre-existing ROS sessions on the host are NOT
+# affected (unlike kill_all_host_ros_processes).
+# ----------------------------------------------------------------------
+_managed_lock = threading.Lock()
+_managed_processes: List[Dict[str, Any]] = []
+_cleanup_done = False
+_handlers_installed = False
+_prev_sigint_handler: Any = None
+
+
+def register_managed_process(popen, **selectors) -> None:
+    """
+    Register a process spawned by this script for automatic cleanup
+    on Ctrl+C or normal interpreter exit.
+
+    Args:
+        popen: A ``subprocess.Popen`` (typically the xterm wrapper
+            shell). ``.terminate()`` will be called on cleanup.
+        **selectors: Optional fallback identifiers for cleanup when
+            killing the Popen alone is not enough. Recognised keys:
+              - ``roscore_port`` (str|int): triggers
+                ``pkill -f "roscore -p <port>"``.
+              - ``kind`` (str): free-form label for logging.
+    """
+    global _handlers_installed, _prev_sigint_handler
+    with _managed_lock:
+        _managed_processes.append({"popen": popen, "selectors": dict(selectors)})
+        already_installed = _handlers_installed
+        _handlers_installed = True
+
+    if not already_installed:
+        atexit.register(_cleanup_managed_processes)
+        try:
+            _prev_sigint_handler = signal.signal(signal.SIGINT, _sigint_handler)
+        except ValueError:
+            _prev_sigint_handler = None
+
+
+def _sigint_handler(signum, frame):
+    """
+    On Ctrl+C: tear down managed processes once, then chain to the
+    previously-installed SIGINT handler (or KeyboardInterrupt). A
+    second Ctrl+C during cleanup hits the chained handler and bails
+    out immediately.
+    """
+    try:
+        signal.signal(signal.SIGINT, _prev_sigint_handler if _prev_sigint_handler else signal.SIG_DFL)
+    except (ValueError, TypeError):
+        signal.signal(signal.SIGINT, signal.SIG_DFL)
+
+    try:
+        rospy.loginfo("SIGINT received; cleaning up spawned roscore...")
+    except Exception:
+        print("[realros] SIGINT received; cleaning up spawned roscore...")
+
+    _cleanup_managed_processes()
+
+    if callable(_prev_sigint_handler) and _prev_sigint_handler not in (signal.SIG_DFL, signal.SIG_IGN):
+        try:
+            _prev_sigint_handler(signum, frame)
+            return
+        except Exception:
+            pass
+    raise KeyboardInterrupt
+
+
+def _cleanup_managed_processes() -> None:
+    """Tear down every registered managed process. Idempotent."""
+    global _cleanup_done
+    with _managed_lock:
+        if _cleanup_done:
+            return
+        _cleanup_done = True
+        to_cleanup = list(_managed_processes)
+        _managed_processes.clear()
+
+    if not to_cleanup:
+        return
+
+    for entry in to_cleanup:
+        popen = entry["popen"]
+        selectors = entry["selectors"]
+
+        try:
+            if popen is not None and popen.poll() is None:
+                popen.terminate()
+        except Exception:
+            pass
+
+        port = selectors.get("roscore_port")
+        if port:
+            try:
+                subprocess.run(
+                    ["pkill", "-f", f"roscore -p {port}"],
+                    timeout=5,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+            except Exception:
+                pass
+
+    time.sleep(0.5)
+
+    for entry in to_cleanup:
+        popen = entry["popen"]
+        try:
+            if popen is not None and popen.poll() is None:
+                popen.kill()
+        except Exception:
+            pass
 
 
 def _port_is_free(port: int) -> bool:
@@ -169,9 +286,14 @@ def launch_roscore(port: int = None, set_new_master_vars: bool = True, default_p
     # launch roscore as a term command
     term_cmd = "roscore -p " + ros_port
     term_cmd = "xterm -e ' " + term_cmd + "'"
-    subprocess.Popen(term_cmd, shell=True)
+    roscore_proc = subprocess.Popen(term_cmd, shell=True)
     time.sleep(5.0)
     rospy.loginfo("Roscore launched! with port: " + ros_port)
+
+    # Register for Ctrl+C / atexit cleanup. The xterm wrapper may
+    # detach, so we also record the port so cleanup can issue a
+    # targeted ``pkill -f "roscore -p <port>"`` scoped to OUR roscore.
+    register_managed_process(roscore_proc, roscore_port=ros_port, kind="roscore")
 
     # change the current ROS_MASTER to the selected one
     if set_new_master_vars:
