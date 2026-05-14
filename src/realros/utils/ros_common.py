@@ -1,29 +1,30 @@
 #! /usr/bin/env python
 
 """
-This script is to specify all the common functions related to the handling of ROS.
-It has the following functions,
-    01. launch_roscore: Launch a rocore with a given or random (no overlapping) port
-    02. get_all_the_ros_masters: Get all the current ros master ports
-    03. add_to_rosmaster_list: Add a port to the current ros master ports list
-    04. remove_from_rosmaster_list: remove a port from the current ros master ports list
-    05. kill_all_host_ros_processes: Kill ALL ROS processes on this host.
-    06. kill_all_host_roslaunch_processes: Kill ALL roslaunch processes on this host.
-    07. kill_all_ros_nodes: Kill all running ROS nodes of a specified or the current ROS master.
-    08. kill_ros_node: Kill a single ROS node of a given or current ROS master.
-    09. ros_kill_master: Kill a ROS master
-    10. clean_ros_logs: Clean all ros logs
-    11. source_workspace: Source a ros workspace
-    12. ros_launch_launcher: Execute a roslaunch with args
-    13. ros_node_launcher: Launch a ROS node from ROS package
-    14. ros_load_yaml: Fetch a YAML file from a package or a path and load it into the ROS Parameter Server.
-    15. load_urdf: Load a URDF into the parameter server or a string containing the processed URDF data
-    16. is_roscore_running: Check if a roscore is currently running
-    17. change_ros_master: Set the current ROS Master Environment Variable.
-    18. change_ros_master_multi_device: Set the current ROS Master Environment Variable for multi-device
-    19. init_robot_state_publisher: Initialize the robot state publisher.
-    20. remove_all_from_rosmaster_list: Remove all ports from the Multiros rosmaster port list.
+Common helpers for handling ROS from inside the realros framework.
 
+Functions provided:
+
+- ``launch_roscore`` — launch a roscore with a given or random (non-overlapping) port.
+- ``get_all_the_ros_masters`` — get all the currently-known rosmaster ports (diagnostic).
+- ``add_to_rosmaster_list`` — add a port to the diagnostic port log.
+- ``remove_from_rosmaster_list`` — remove a port from the diagnostic port log.
+- ``kill_all_host_ros_processes`` — kill ALL ROS processes on this host.
+- ``kill_all_host_roslaunch_processes`` — kill ALL roslaunch processes on this host.
+- ``kill_all_ros_nodes`` — kill every node attached to the current rosmaster.
+- ``kill_ros_node`` — kill a single named ROS node.
+- ``ros_kill_master`` — kill a specific rosmaster by port.
+- ``clean_ros_logs`` — purge ROS logs.
+- ``source_workspace`` — deprecated no-op.
+- ``ros_launch_launcher`` — execute a roslaunch with args.
+- ``ros_node_launcher`` — launch a ROS node from a package.
+- ``ros_load_yaml`` — fetch and load a YAML file onto the ROS parameter server.
+- ``load_urdf`` — load a URDF onto the parameter server.
+- ``is_roscore_running`` — check whether a roscore is reachable.
+- ``change_ros_master`` — set ROS_MASTER_URI for this process.
+- ``change_ros_master_multi_device`` — set ROS_MASTER_URI for cross-machine use.
+- ``init_robot_state_publisher`` — start the robot_state_publisher node.
+- ``remove_all_from_rosmaster_list`` — truncate the diagnostic port log.
 """
 import rosparam
 import rospy
@@ -69,11 +70,11 @@ def register_managed_process(popen, **selectors) -> None:
     Args:
         popen: A ``subprocess.Popen`` (typically the xterm wrapper
             shell). ``.terminate()`` will be called on cleanup.
-        **selectors: Optional fallback identifiers for cleanup when
-            killing the Popen alone is not enough. Recognised keys:
-              - ``roscore_port`` (str|int): triggers
-                ``pkill -f "roscore -p <port>"``.
-              - ``kind`` (str): free-form label for logging.
+        **selectors: Optional fallback identifiers used by cleanup
+            when terminating the Popen alone is not enough.
+            Recognised keys are ``roscore_port`` (str | int), which
+            triggers ``pkill -f "roscore -p <port>"``; and ``kind``
+            (str), a free-form label used in log lines.
     """
     global _handlers_installed, _prev_sigint_handler
     with _managed_lock:
