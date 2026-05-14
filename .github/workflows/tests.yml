@@ -27,6 +27,12 @@ jobs:
       # realros's proxy class + shared utilities live in UniROS. Clone the
       # branch matching whatever branch this workflow is running on, so a PR
       # or push on realros's cleanup-2026 pulls UniROS's cleanup-2026, etc.
+      #
+      # IMPORTANT: when fast-forwarding cleanup-2026 → gymnasium across the
+      # ecosystem, merge UniROS *first* and the dependent repos after. If a
+      # dependent repo (multiros, realros) is pushed before UniROS, its CI
+      # will check out the *old* UniROS gymnasium tip (missing the new
+      # uniros._proxy and uniros.utils packages) and fail to import them.
       - name: Check out UniROS
         uses: actions/checkout@v4
         with:
