@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>realros</name>
-  <version>0.3.1</version>
+  <version>0.3.2</version>
   <description>A Comprehensive Framework for Real-World Robotic Reinforcement Learning</description>
 
   <author email="j.kapukotuwa@research.ait.ie">Jayasekara Kapukotuwa</author>
