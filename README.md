@@ -184,13 +184,13 @@ To get started with RealROS, follow these steps:
    
 ## Usage
 
-You can refer to the [templates](https://github.com/ncbdrck/realros/tree/main/src/realros/templates) or the [examples](https://github.com/ncbdrck/rl_environments) to see how to use RealROS to create a real-world environment for RL applications.
+You can refer to the [Docs](https://uniros.readthedocs.io/en/latest/guides/env_creation_real.html), [templates](https://github.com/ncbdrck/realros/tree/main/src/realros/templates) or the [examples](https://github.com/ncbdrck/rl_environments) to see how to use RealROS to create a real-world environment for RL applications.
 
 It also showcases:
 - How to use RealROS to create a real-world environment for RL applications.
-- Train the Rx200 robot directly in the real world to perform a simple reach task.
+- Train robots directly in the real world to perform various tasks.
 - Use [MultiROS](https://github.com/ncbdrck/multiros) framework to create a simulation environment for the same robot and train it in the simulation environment. Then, transfer the learned policy to the real-world environment.
-- Train both environments (sim and real) in real-time to obtain a generalized policy that performs well in both environments.
+- Train both environments (sim and real) in real-time to obtain a generalised policy that performs well in both environments.
 
 The installation instructions for the examples are provided in the respective repositories.
 
