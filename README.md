@@ -17,9 +17,30 @@ This framework provides the following features:
 For more information, please refer to the main [UniROS repository](https://github.com/ncbdrck/UniROS) which integrates [MultiROS](https://github.com/ncbdrck/multiros) and RealROS.
 
 
+## Easiest install: one-shot script
+
+If you're starting fresh on Ubuntu 20.04, run the bootstrap installer
+that ships in this repo (and identically in every other ecosystem
+repo: UniROS, MultiROS, sb3_ros_support, rl_environments,
+rl_training_validation). It installs ROS Noetic, UniROS (with MultiROS
++ RealROS as submodules), sb3_ros_support, rl_environments (with all
+4 robots' vendor packages + supporting description-extras + cube
+tracker), and rl_training_validation.
+
+```bash
+git clone https://github.com/ncbdrck/realros.git /tmp/uniros_bootstrap
+bash /tmp/uniros_bootstrap/install_uniros_stack.sh                # interactive
+bash /tmp/uniros_bootstrap/install_uniros_stack.sh -y             # unattended
+bash /tmp/uniros_bootstrap/install_uniros_stack.sh -p ~/my_ws -y  # custom path
+```
+
+The script asks once whether to install all components or pick per-
+component; refuses to run on non-Ubuntu-20.04 (Noetic requirement).
+The manual setup steps below still work for piece-by-piece installs.
+
 ## Prerequisites
 
-Before installing RealROS, make sure you have the following prerequisites:
+Before installing RealROS manually, make sure you have the following prerequisites:
 
 ### ROS Installation
 
